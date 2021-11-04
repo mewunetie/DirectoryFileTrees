@@ -115,13 +115,13 @@ the location of the underlying error, which is not necessarily where
 the error manifests itself or is "noticed" by the client.
 
 
-      Executable         Function with the underlying error
+Executable         Function with the underlying error
 ===============================================================
-         ./bdtBad1        
+         ./bdtBad1        BDT_insertPath()
 ---------------------------------------------------------------
-         ./bdtBad2        
+         ./bdtBad2        BDT_newNode()
 ---------------------------------------------------------------
-         ./bdtBad3        
+         ./bdtBad3        BDT_unlinkParentToChild()
 ===============================================================
 
 ------------------------------------------------------------------------
@@ -131,11 +131,14 @@ For bdtBad4, you do not have to find the bug. Instead, indicate what
 is the fundamental difference with trying to debug this executable in
 gdb versus the first three:
 
+The difference between this one and the others is that for the first three, there was either an error that only showed itself manifested in one group of print outs or simply showed that the program stopped working at a specific line. For this one, not only did it show an error in 2 different groups of outputs, but the issue was that it printed out a set of values that weren't in the possible temps. Another difference was that when trying to print (temp = BDT_toString() in the areas where there were bugs, it printed out a\na/b\n...etc. which seemed right, but when running the whole program, it was printed something entirely different (0^ACa). The error didn't manifest itself into all printouts of temp. We were able to debug this program by comparing it to the previous 3 since we knew which parts had errors in the previous ones finding that it was in BDT_toString().
 
 
 For bdtBad5, you do not have to find the bug. Instead, indicate one
 hypothesis for how the program could crash within the DynArray module,
 which we promise is itself correct:
+
+Running bdtBad5 indicates that an assertion error occurs in the function BDT_strlenAccumulate, because the given string pointer is NULL. This could cause DynArray to crash if the DynArray_map module is passed the BDT_strlenAccumulate function, and the DynArray object it operates on contains NULL string pointers, which would initiate the same error since the NULL string pointers in the DynArray object will be passed into BDT_strlenAccumulate.
 
 
 
