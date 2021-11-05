@@ -145,7 +145,6 @@ of temp. We were able to debug this program by comparing it to the
 previous 3 since we knew which parts had errors in the previous ones
 finding that it was in BDT_toString().
 
-
 For bdtBad5, you do not have to find the bug. Instead, indicate one
 hypothesis for how the program could crash within the DynArray module,
 which we promise is itself correct:
@@ -157,8 +156,6 @@ passed the BDT_strlenAccumulate function, and the DynArray object it
 operates on contains NULL string pointers, which would initiate the
 same error since the NULL string pointers in the DynArray object will
 be passed into BDT_strlenAccumulate.
-
-
 
 ------------------------------------------------------------------------
 What are your critiques of the given DT implementations, as
