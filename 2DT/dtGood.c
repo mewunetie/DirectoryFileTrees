@@ -362,7 +362,8 @@ char* DT_toString(void) {
    nodes = DynArray_new(count);
    (void) DT_preOrderTraversal(root, nodes, 0);
 
-   DynArray_map(nodes, (void (*)(void *, void*)) DT_strlenAccumulate, (void*) &totalStrlen);
+   DynArray_map(nodes, (void (*)(void *, void*)) DT_strlenAccumulate,
+                (void*) &totalStrlen);
 
    result = malloc(totalStrlen);
    if(result == NULL) {
@@ -372,7 +373,8 @@ char* DT_toString(void) {
    }
    *result = '\0';
 
-   DynArray_map(nodes, (void (*)(void *, void*)) DT_strcatAccumulate, (void *) result);
+   DynArray_map(nodes, (void (*)(void *, void*)) DT_strcatAccumulate,
+                (void *) result);
 
    DynArray_free(nodes);
    assert(CheckerDT_isValid(isInitialized,root,count));

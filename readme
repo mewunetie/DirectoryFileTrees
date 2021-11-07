@@ -3,12 +3,12 @@ Assignment 4 readme File
 ------------------------------------------------------------------------
 Student 1: What is your name?
 
-
+Shruti Roy
 
 ------------------------------------------------------------------------
 Student 2: What is your name?
 
-
+Misrach Ewunetie
 
 ------------------------------------------------------------------------
 Student 1: What authorized sources of information did you use to
@@ -81,7 +81,7 @@ your disagreements with them? Copy the splint warnings here, and
 express your disagreement after each warning. If there are no
 warnings, then write "None."
 
-
+None.
 
 ------------------------------------------------------------------------
 What warnings does critTer generate on checkerDT.c, and what are your
@@ -89,7 +89,7 @@ disagreements with them? Copy the critTer warnings here, and express
 your disagreement after each warning. If there are no warnings, then
 write "None."
 
-
+None.
 
 ------------------------------------------------------------------------
 What warnings does splint generate on your Part 3 code, and what are
@@ -161,6 +161,38 @@ be passed into BDT_strlenAccumulate.
 What are your critiques of the given DT implementations, as
 specified in Step 2.5?
 
+-DT_traversePathFrom is only called by DT_traversePath;
+unnecessary to have multiple functions when only one is needed
 
+-DT_removePathFrom only calls Node_destroy; unnecessary to have a
+unique function
+
+-DT_rmPathAt is only called by DT_rmPath; functions can be combined
+
+-DT_toString can be simplified by including the DT_strlenAccumulate
+functionality in DT_preOrderTraversal, since both are only used by
+DT_toString
+
+-Node_create and Node_addChild are redundant; Node_create should be
+modified to link parent and child if parent is not NULL,
+and Node_addChild discarded
+
+-Node_buildPath is only called by Node_create and Node_addChild;
+functions can be merged
+
+-Node_getPath returns a pointer to the path field to client; data is
+not encapsulated properly
+
+-DT_linkParentToChild just calls Node_linkChild;
+unnecessary and redudant
+
+-Node_unlinkChild is only called by DT_rmPathAt before destroying the
+child; function can be incorporated in Node_destroy
+(also reduces coupling)
+
+-DT_insertRestOfPath is strongly coupled with Node; uses Node_create
+and DT_linkParentToChild (i.e. calling Node_linkChild), which can be
+decoupled by only calling Node_addChild; Node_linkChild can be made
+static
 
 ------------------------------------------------------------------------
