@@ -137,8 +137,18 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
 
       newCount++;
 
-      if(firstNew == NULL)
+    if(firstNew == NULL)
          firstNew = new;
+    else {
+         result = FT_linkParentToChild(curr, new);
+         if(result != SUCCESS) {
+            (void) Node_destroy(new);
+            (void) Node_destroy(firstNew);
+            free(copyPath);
+            return result;
+         }
+      }
+
 
       curr = new;
       dirToken = strtok(NULL, "/");
@@ -238,6 +248,39 @@ int FT_rmDir(char *path)
    return result;
 }
 
+/*
+   Starting at the parameter curr, traverses as far down
+   the hierarchy as possible while still matching the path
+   parameter.
+
+   Returns a pointer to the farthest matching node down that path,
+   or NULL if there is no node in curr's hierarchy that matches
+   a prefix of the path
+*/
+static File_T FT_traversePathFile(char* path, File_T curr) {
+   File_T found;
+   size_t i;
+
+   assert(path != NULL);
+
+   if(curr == NULL)
+      return NULL;
+
+   else if(!strcmp(path,File_getPath(File_getParent(curr))))
+      return curr;
+
+   else if(!strncmp(path, File_getPath(curr), strlen(File_getPath(File_getParent(curr))))) {
+      while (File_getParent != NULL) {
+         found = FT_traversePath(path,
+                                File_getParent(curr));
+         if(found != NULL)
+            return found;
+      }
+      return curr;
+   }
+   return NULL;
+}
+
 
 static int FT_insertPathHelper(char* path, File_T parent) {
 
@@ -270,7 +313,7 @@ static int FT_insertPathHelper(char* path, File_T parent) {
    dirToken = strtok(copyPath, "/");
 
    while(dirToken != NULL) {
-      new = File_create(dirToken, curr);
+      new = File_create(dirToken, curr,);
 
       if(new == NULL) {
          if(firstNew != NULL)
@@ -314,6 +357,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
    if(!isInitialized)
       return INITIALIZATION_ERROR;
 
+
     curr = File_create(path, NULL, contents, length);
    result = FT_insertPathHelper(path, curr);
 
@@ -321,13 +365,66 @@ int FT_insertFile(char *path, void *contents, size_t length)
    return result;
 
 }
+
 boolean FT_containsFile(char *path)
 {
+    File_T curr;
+   boolean result;
+
+   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(path != NULL);
+
+   if(!isInitialized)
+      return FALSE;
+
+   curr = FT_traversePathFile(path, root);
+
+
+   if(curr == NULL)
+      result = FALSE;
+   else if(strcmp(path, File_getPath(curr)))
+      result = FALSE;
+   else
+      result = TRUE;
+
+   assert(CheckerDT_isValid(isInitialized,root,count));
+   return result;
 
 }
 int FT_rmFile(char *path)
 {
-    
+     File_T curr, parent;
+   int result;
+
+   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(path != NULL);
+   
+
+   if(!isInitialized)
+      return INITIALIZATION_ERROR;
+
+   curr = FT_traversePathFile(path, root);
+   if(curr == NULL)
+      result =  NO_SUCH_PATH;
+   else {
+         parent = File_getParent(curr);
+
+   if(!strcmp(path,File_getPath(curr))) 
+   {
+      if(parent == NULL)
+         root = NULL;
+
+      File_destroy(curr);
+
+      result = SUCCESS;
+   }
+
+   else
+      result = NO_SUCH_PATH;
+   }
+
+   assert(CheckerDT_isValid(isInitialized,root,count));
+   return result;
 }
 void *FT_getFileContents(char *path)
 {
@@ -347,11 +444,26 @@ int FT_init(void)
 {
 
 }
+
+
+
 int FT_destroy(void)
 {
+    assert(CheckerDT_isValid(isInitialized,root,count));
+   if(!isInitialized)
+      return INITIALIZATION_ERROR;
+
+   if (root != NULL) {
+       count = 0;
+   }
+
+   root = NULL;
+   isInitialized = 0;
+   assert(CheckerDT_isValid(isInitialized,root,count));
+   return SUCCESS;
 
 }
 char *FT_toString(void)
 {
-
+    return File_ToString(root);
 }
