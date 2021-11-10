@@ -17,19 +17,11 @@
 
 /* A Directory Tree is an AO with 3 state variables: */
 /* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
-static boolean isInitializedDir;
+static boolean isInitialized;
 /* a pointer to the root node in the hierarchy */
-static Node_T rootDir;
+static Node_T root;
 /* a counter of the number of nodes in the hierarchy */
-static size_t countDir;
-
-/* A Directory Tree is an AO with 3 state variables: */
-/* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
-static boolean isInitializedFile;
-/* a pointer to the root node in the hierarchy */
-static File_T rootFile;
-/* a counter of the number of nodes in the hierarchy */
-static size_t countFile;
+static size_t count;
 
 
 
@@ -171,14 +163,14 @@ int FT_insertDir(char *path)
    Node_T curr;
    int result;
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    assert(path != NULL);
 
    if(!isInitialized)
       return INITIALIZATION_ERROR;
    curr = FT_traversePath(path, root);
    result = FT_insertRestOfPath(path, curr);
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    return result;
 }
 
@@ -187,7 +179,7 @@ boolean FT_containsDir(char *path)
     Node_T curr;
    boolean result;
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    assert(path != NULL);
 
    if(!isInitialized)
@@ -203,7 +195,7 @@ boolean FT_containsDir(char *path)
    else
       result = TRUE;
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    return result;
 }
 
@@ -215,7 +207,7 @@ int FT_rmDir(char *path)
     Node_T curr, parent;
    int result;
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    assert(path != NULL);
    
 
@@ -242,23 +234,8 @@ int FT_rmDir(char *path)
       result = NO_SUCH_PATH;
    }
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    return result;
-}
-
-static Node_T FT_traversePath(char* path, File_T curr) {
-   File_T found;
-   size_t i;
-
-   assert(path != NULL);
-
-   if(curr == NULL)
-      return NULL;
-
-   else if(!strcmp(path, File_getPath(curr)))
-      return curr;
-
-   return NULL;
 }
 
 
@@ -331,16 +308,16 @@ int FT_insertFile(char *path, void *contents, size_t length)
     File_T curr;
    int result;
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    assert(path != NULL);
 
    if(!isInitialized)
       return INITIALIZATION_ERROR;
-      
-   curr = FT_traversePath(path, root);
+
+    curr = File_create(path, NULL, contents, length);
    result = FT_insertPathHelper(path, curr);
 
-   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(CheckerDT_isValid(isInitialized,root,count));
    return result;
 
 }
