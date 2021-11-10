@@ -52,7 +52,7 @@ struct file {
 
 
 /* see node.h for specification */
-Node_T Node_create(const char* dir, Node_T parent, int *status){
+Node_T Node_create(const char* dir, Node_T parent){
    Node_T new;
    char* path;
 
@@ -305,7 +305,7 @@ char* Node_toString(Node_T n) {
 
 /* see FT_file.h for specification */
 File_T File_create(const char* dir, Node_T parent, void* contents,
-                   size_t length, int* status)
+                   size_t length)
 {
    File_T new;
    char* path;
