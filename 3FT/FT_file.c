@@ -32,7 +32,7 @@ struct file {
 
 /* see FT_file.h for specification */
 File_T File_create(const char* dir, Node_T parent, void* contents
-   size_t length)
+                   size_t length, int* status)
 {
    File_T new;
    int result;
@@ -42,7 +42,9 @@ File_T File_create(const char* dir, Node_T parent, void* contents
 
    new = malloc(sizeof(struct file));
    if(new == NULL) {
+      *status = MEMORY_ERROR;
       return NULL;
+   }
 
    if(parent == NULL)
       path = malloc(strlen(dir)+1);
@@ -51,6 +53,7 @@ File_T File_create(const char* dir, Node_T parent, void* contents
 
    if(path == NULL) {
       free(new);
+      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -71,6 +74,7 @@ File_T File_create(const char* dir, Node_T parent, void* contents
    if(new->contents == NULL) {
       free(new->path);
       free(new);
+      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -80,6 +84,7 @@ File_T File_create(const char* dir, Node_T parent, void* contents
        result = Node_linkChild(parent, new, file);
        if(result != SUCCESS)
            (void) File_destroy(new, file);
+       *status = result;
    }
 
    return new;
