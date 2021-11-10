@@ -56,7 +56,7 @@ char* File_getPath(File_T n);
 /*
    Returns the parent File of n, if it exists, otherwise returns NULL
 */
-File_T File_getParent(File_T n);
+Node_T File_getParent(File_T n);
 
 /* Returns a copy of the content contained within the File of n, if it exists, otherwise returns NULL. The caller will then own the memory allocated for the copy of the content of the file 
 */
