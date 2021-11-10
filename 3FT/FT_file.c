@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* FT_node.c                                                          */
+/* FT_file.h.c                                                          */
 /* Authors: Misrach Ewunetie, Shruti Roy                              */
 /*--------------------------------------------------------------------*/
 
@@ -9,42 +9,39 @@
 #include <stdio.h>
 
 #include "dynarray.h"
-#include "FT_node.h"
+#include "FT_file.h"
 #include "checkerDT.h"
 
 /*
-   A node structure represents a directory in the directory tree
+   A File structure represents a directory in the directory tree
 */
-struct node {
+struct file {
    /* the full path of this directory */
    char* path;
 
    /* the parent directory of this directory
       NULL for the root of the directory tree */
-   Node_T parent;
+   File_T parent;
+   
+   /* conent contained in of the file File */
+   void *contents;
 
-   /* the files of this directory
-      stored in sorted order by pathname */
-   DynArray_T fchildren;
-
-   /* the subdirectories of this directory
-      stored in sorted order by pathname */
-   DynArray_T dchildren;
+   /* size of conents */
+   size_t length;
 };
 
-
-/* see node.h for specification */
-Node_T Node_create(const char* dir, Node_T parent){
-   Node_T new;
+/* see FT_file.h for specification */
+File_T File_create(const char* dir, File_T parent){
+   File_T new;
    int result;
    char* path;
 
-   assert(parent == NULL || CheckerDT_Node_isValid(parent));
+   assert(parent == NULL || CheckerDT_File_isValid(parent));
    assert(dir != NULL);
 
-   new = malloc(sizeof(struct node));
+   new = malloc(sizeof(struct file));
    if(new == NULL) {
-      assert(parent == NULL || CheckerDT_Node_isValid(parent));
+      assert(parent == NULL || CheckerDT_File_isValid(parent));
       return NULL;
    }
 
@@ -56,7 +53,7 @@ Node_T Node_create(const char* dir, Node_T parent){
 
    if(path == NULL) {
       free(new);
-      assert(parent == NULL || CheckerDT_Node_isValid(parent));
+      assert(parent == NULL || CheckerDT_File_isValid(parent));
       return NULL;
    }
 
@@ -85,50 +82,50 @@ Node_T Node_create(const char* dir, Node_T parent){
       }
       free(new->path);
       free(new);
-      assert(parent == NULL || CheckerDT_Node_isValid(parent));
+      assert(parent == NULL || CheckerDT_File_isValid(parent));
       return NULL;
    }
 
     if (parent != NULL) {
-        result = Node_linkChild(parent, new);
+        result = File_linkChild(parent, new, file);
         if(result != SUCCESS)
-            (void) Node_destroy(new);
+            (void) File_destroy(new, file);
         else
-            assert(CheckerDT_Node_isValid(new));
+            assert(CheckerDT_File_isValid(new));
 
-        assert(CheckerDT_Node_isValid(parent));
+        assert(CheckerDT_File_isValid(parent));
     }
 
 
-   assert(parent == NULL || CheckerDT_Node_isValid(parent));
-   assert(CheckerDT_Node_isValid(new));
+   assert(parent == NULL || CheckerDT_File_isValid(parent));
+   assert(CheckerDT_File_isValid(new));
    return new;
 }
 
-/* see node.h for specification */
-size_t Node_destroy(Node_T n) {
+/* see FT_file.h for specification */
+size_t File_destroy(File_T n) {
    size_t i;
    size_t count = 0;
-   Node_T c;
+   File_T c;
 
    assert(n != NULL);
    
    if (n->parent != NULL) {
-       Node_unlinkChild(n->parent, n);
+       File_unlinkChild(n->parent, n, file);
    }
 
     if(!file) {
         for(i = 0; i < DynArray_getLength(n->fchildren); i++)
         {
             c = DynArray_get(n->fchildren, i);
-            count += Node_destroy(c);
+            count += File_destroy(c);
         }
         DynArray_free(n->fchildren);
 
         for(i = 0; i < DynArray_getLength(n->dchildren); i++)
         {
             c = DynArray_get(n->dchildren, i);
-            count += Node_destroy(c);
+            count += File_destroy(c);
         }
         DynArray_free(n->dchildren);
     }
@@ -140,8 +137,8 @@ size_t Node_destroy(Node_T n) {
    return count;
 }
 
-/* see node.h for specification */
-char* Node_getPath(Node_T n) {
+/* see FT_file.h for specification */
+char* File_getPath(File_T n) {
    char* pathCopy;
 
    assert(n != NULL);
@@ -154,16 +151,16 @@ char* Node_getPath(Node_T n) {
 }
 
 
-/* see node.h for specification */
-int Node_compare(Node_T node1, Node_T node2) {
-   assert(node1 != NULL);
-   assert(node2 != NULL);
+/* see FT_file.h for specification */
+int File_compare(File_T File1, File_T File2) {
+   assert(File1 != NULL);
+   assert(File2 != NULL);
 
-   return strcmp(node1->path, node2->path);
+   return strcmp(File1->path, File2->path);
 }
 
-/* see node.h for specification */
-size_t Node_getNumChildren(Node_T n) {
+/* see FT_file.h for specification */
+size_t File_getNumChildren(File_T n) {
     DynArray_T children;
    assert(n != NULL);
 
@@ -174,17 +171,17 @@ size_t Node_getNumChildren(Node_T n) {
    return DynArray_getLength(children);
 }
 
-/* see node.h for specification */
-int Node_hasChild(Node_T n, const char* path, size_t* childID) {
+/* see FT_file.h for specification */
+int File_hasChild(File_T n, const char* path, size_t* childID) {
    size_t index;
    int result;
-   Node_T checker;
+   File_T checker;
    DynArray_T children;
 
    assert(n != NULL);
    assert(path != NULL);
 
-   checker = Node_create(path, NULL);
+   checker = File_create(path, NULL, file);
    if(checker == NULL) {
       return -1;
    }
@@ -195,8 +192,8 @@ int Node_hasChild(Node_T n, const char* path, size_t* childID) {
         children = n->dchildren;
 
    result = DynArray_bsearch(children, checker, &index,
-                    (int (*)(const void*, const void*)) Node_compare);
-   (void) Node_destroy(checker);
+                    (int (*)(const void*, const void*)) File_compare);
+   (void) File_destroy(checker, file);
 
    if(childID != NULL)
       *childID = index;
@@ -204,8 +201,8 @@ int Node_hasChild(Node_T n, const char* path, size_t* childID) {
    return result;
 }
 
-/* see node.h for specification */
-Node_T Node_getChild(Node_T n, size_t childID) {
+/* see FT_file.h for specification */
+File_T File_getChild(File_T n, size_t childID) {
     DynArray_T children;
    assert(n != NULL);
 
@@ -222,8 +219,8 @@ Node_T Node_getChild(Node_T n, size_t childID) {
    }
 }
 
-/* see node.h for specification */
-Node_T Node_getParent(Node_T n) {
+/* see FT_file.h for specification */
+File_T File_getParent(File_T n) {
    assert(n != NULL);
 
    return n->parent;
@@ -238,37 +235,37 @@ Node_T Node_getParent(Node_T n) {
     or the parent cannot link to the child,
     in which cases: returns PARENT_CHILD_ERROR
  */
-static int Node_linkChild(Node_T parent, Node_T child) {
+static int File_linkChild(File_T parent, File_T child) {
    size_t i;
    char* rest;
     DynArray_T children;
 
    assert(parent != NULL);
    assert(child != NULL);
-   assert(CheckerDT_Node_isValid(parent));
-   assert(CheckerDT_Node_isValid(child));
+   assert(CheckerDT_File_isValid(parent));
+   assert(CheckerDT_File_isValid(child));
 
-   if(Node_hasChild(parent, child->path, NULL)) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+   if(File_hasChild(parent, child->path, NULL, file)) {
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return ALREADY_IN_TREE;
    }
    i = strlen(parent->path);
    if(strncmp(child->path, parent->path, i)) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return PARENT_CHILD_ERROR;
    }
    rest = child->path + i;
    if(strlen(child->path) >= i && rest[0] != '/') {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return PARENT_CHILD_ERROR;
    }
    rest++;
    if(strstr(rest, "/") != NULL) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return PARENT_CHILD_ERROR;
    }
    child->parent = parent;
@@ -279,42 +276,42 @@ static int Node_linkChild(Node_T parent, Node_T child) {
         children = parent->dchildren;
 
    if(DynArray_bsearch(children, child, &i,
-         (int (*)(const void*, const void*)) Node_compare) == 1) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+         (int (*)(const void*, const void*)) File_compare) == 1) {
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return ALREADY_IN_TREE;
    }
 
     if(DynArray_bsearch(children, child, &i,
-         (int (*)(const void*, const void*)) Node_compare) == 1) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+         (int (*)(const void*, const void*)) File_compare) == 1) {
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return ALREADY_IN_TREE;
    }
 
    if(DynArray_addAt(children, i, child) == TRUE) {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return SUCCESS;
    }
    else {
-      assert(CheckerDT_Node_isValid(parent));
-      assert(CheckerDT_Node_isValid(child));
+      assert(CheckerDT_File_isValid(parent));
+      assert(CheckerDT_File_isValid(child));
       return PARENT_CHILD_ERROR;
    }
 }
 
 /*
-  Unlinks node parent from its child node child, if it can be found in the parent's children. child is unchanged.
+  Unlinks File parent from its child File child, if it can be found in the parent's children. child is unchanged.
  */
-static void Node_unlinkChild(Node_T parent, Node_T child) {
+static void File_unlinkChild(File_T parent, File_T child) {
    size_t i;
    DynArray_T children;
 
    assert(parent != NULL);
    assert(child != NULL);
-   assert(CheckerDT_Node_isValid(parent));
-   assert(CheckerDT_Node_isValid(child));
+   assert(CheckerDT_File_isValid(parent));
+   assert(CheckerDT_File_isValid(child));
 
    if(file)
         children = parent->fchildren;
@@ -322,16 +319,16 @@ static void Node_unlinkChild(Node_T parent, Node_T child) {
         children = parent->dchildren;
 
    if(DynArray_bsearch(children, child, &i,
-         (int (*)(const void*, const void*)) Node_compare) != 0)
+         (int (*)(const void*, const void*)) File_compare) != 0)
         (void) DynArray_removeAt(children, i);
 
-   assert(CheckerDT_Node_isValid(parent));
-   assert(CheckerDT_Node_isValid(child));
+   assert(CheckerDT_File_isValid(parent));
+   assert(CheckerDT_File_isValid(child));
 }
 
 
-/* see node.h for specification */
-char* Node_toString(Node_T n) {
+/* see FT_file.h for specification */
+char* File_ToString(File_T n) {
    char* copyPath;
 
    assert(n != NULL);

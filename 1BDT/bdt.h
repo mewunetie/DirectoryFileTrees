@@ -18,7 +18,7 @@ enum { SUCCESS,
 };
 
 /* In lieu of a proper boolean datatype */
-typedef enum bool { FALSE, TRUE } boolean;
+typedef enum bool { FALSE } boolean;
 
 /*
    Inserts a new path into the tree, if possible.
