@@ -16,6 +16,7 @@
 */
 typedef struct node* Node_T;
 
+#include "FT_file.h"
 
 /*
    Given a parent node and a directory string dir, returns a new

@@ -15,6 +15,7 @@
 */
 typedef struct file* File_T;
 
+#include "FT_directory.c"
 
 /*
    Given a parent File and a directory string dir, returns a new
@@ -38,7 +39,6 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
   Destroys the file n.
 */
 void File_destroy(File_T n);
-
 
 /*
   Compares File1 and File2 based on their paths.

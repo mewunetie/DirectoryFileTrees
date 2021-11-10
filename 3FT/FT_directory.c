@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* FT_node.c                                                          */
+/* FT_directory.c                                                     */
 /* Authors: Misrach Ewunetie, Shruti Roy                              */
 /*--------------------------------------------------------------------*/
 
@@ -10,8 +10,6 @@
 
 #include "dynarray.h"
 #include "FT_directory.h"
-#include "FT_file.h"
-#include "checkerDT.h"
 
 /*
    A node structure represents a directory in the directory tree
@@ -32,7 +30,6 @@ struct node {
       stored in sorted order by pathname */
    DynArray_T dchildren;
 };
-
 
 /* see node.h for specification */
 Node_T Node_create(const char* dir, Node_T parent, int *status){
@@ -87,7 +84,7 @@ Node_T Node_create(const char* dir, Node_T parent, int *status){
    if (parent != NULL) {
       result = Node_linkChild(parent, new);
       if(result != SUCCESS)
-         (void) Node_destroy(new);
+         Node_destroy(new);
       *status = result;
    }
 
@@ -98,8 +95,9 @@ Node_T Node_create(const char* dir, Node_T parent, int *status){
 size_t Node_destroy(Node_T n) {
    size_t i;
    size_t count = 0;
-   Node_T c;
-
+   Node_T d;
+   File_T f;
+   
    assert(n != NULL);
    
    if (n->parent != NULL) {
@@ -108,16 +106,16 @@ size_t Node_destroy(Node_T n) {
 
    for(i = 0; i < DynArray_getLength(n->fchildren); i++)
    {
-      c = DynArray_get(n->fchildren, i);
-      File_destroy(c);
+      f = DynArray_get(n->fchildren, i);
+      File_destroy(f);
       count++;
    }
    DynArray_free(n->fchildren);
 
    for(i = 0; i < DynArray_getLength(n->dchildren); i++)
    {
-      c = DynArray_get(n->dchildren, i);
-      count += Node_destroy(c);
+      d = DynArray_get(n->dchildren, i);
+      count += Node_destroy(d);
    }
    DynArray_free(n->dchildren);
 
@@ -173,7 +171,7 @@ int Node_hasChild(Node_T n, const char* path, size_t* childID,
    assert(n != NULL);
    assert(path != NULL);
 
-   checker = Node_create(path, NULL);
+   checker = Node_create(path, NULL, &result);
    if(checker == NULL) {
       return -1;
    }
@@ -235,7 +233,7 @@ static int Node_linkChild(Node_T parent, Node_T child) {
    assert(parent != NULL);
    assert(child != NULL);
 
-   if(Node_hasChild(parent, child->path, NULL))
+   if(Node_hasChild(parent, child->path, NULL, FALSE))
       return ALREADY_IN_TREE;
 
    i = strlen(parent->path);
@@ -278,7 +276,7 @@ static void Node_unlinkChild(Node_T parent, Node_T child) {
 
    if(DynArray_bsearch(parent->dchildren, child, &i,
          (int (*)(const void*, const void*)) Node_compare) != 0)
-        (void) DynArray_removeAt(parent->children, i);
+        (void) DynArray_removeAt(parent->dchildren, i);
 }
 
 

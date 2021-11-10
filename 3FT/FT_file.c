@@ -10,7 +10,6 @@
 
 #include "dynarray.h"
 #include "FT_file.h"
-#include "FT_node.h"
 
 /*
    A File structure represents a file in the directory tree
