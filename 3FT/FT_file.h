@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
-/* File.h                                                             */
-/* Author: Christopher Moretti                                        */
+/* FT_file.h                                                             */
+/* Authors: Shruti Roy, Misrach Ewunetie                              */
 /*--------------------------------------------------------------------*/
 
 #ifndef File_INCLUDED
@@ -29,16 +29,13 @@ typedef struct file* File_T;
    do not point to any children.
 */
 
-File_T File_create(const char* dir, File_T parent, void* contents,
+File_T File_create(const char* dir, Node_T parent, void* contents,
    size_t length);
 
 /*
-  Destroys the entire hierarchy of Files rooted at n,
-  including n itself.
-
-  Returns the number of Files destroyed.
+  Destroys the file n.
 */
-size_t File_destroy(File_T n);
+void File_destroy(File_T n);
 
 
 /*
@@ -54,18 +51,22 @@ int File_compare(File_T File1, File_T File2);
 char* File_getPath(File_T n);
 
 /*
-   Returns the parent File of n, if it exists, otherwise returns NULL
+   Returns the parent Node of n, if it exists, otherwise returns NULL
 */
 Node_T File_getParent(File_T n);
 
-/* Returns a copy of the content contained within the File of n, if it exists, otherwise returns NULL. The caller will then own the memory allocated for the copy of the content of the file 
+/* Returns a copy of the content contained within the File of n, 
+   if it exists, otherwise returns NULL. The caller will then own the 
+   memory allocated for the copy of the content of the file 
 */
 void* File_getContents(File_T n);
 
 /* Replaces the content of the file n with the contents passed in using
-the length of the contents in order to replace the contents.
-*/
+   the length of the contents in order to replace the contents.
 
+   Returns a copy of the contents of file n, for which the client is
+   now responsible.
+*/
 void* File_replaceContents(File_T n, void *contents, size_t length);
 
 /*
