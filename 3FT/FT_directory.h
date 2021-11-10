@@ -34,11 +34,8 @@ Node_T Node_create(const char* dir, Node_T parent);
 /*
   Destroys the entire hierarchy of nodes rooted at n,
   including n itself.
-
-  Returns the number of nodes destroyed.
 */
-size_t Node_destroy(Node_T n, boolean file);
-
+size_t Node_destroy(Node_T n);
 
 /*
   Compares node1 and node2 based on their paths.
@@ -66,19 +63,24 @@ size_t Node_getNumChildren(Node_T n, boolean file);
    child's identifier in *childID. If n does not have such a child,
    store the identifier that such a child would have in *childID.
 */
-int Node_hasChild(Node_T n, const char* path, size_t* childID, boolean file);
+int Node_hasChild(Node_T n, const char* path, size_t* childID,
+                  boolean file);
 
 /*
    Returns the child node of n with identifier childID, if one exists,
    otherwise returns NULL.
 */
-Node_T Node_getChild(Node_T n, size_t childID, boolean file);
+Node_T Node_getDirChild(Node_T n, size_t childID);
+
+/* Returns the child file of n with identifier childID, if one exists,
+   otherwise returns NULL.
+*/
+File_T Node_getFileChild(Node_T n, size_t childID);
 
 /*
    Returns the parent node of n, if it exists, otherwise returns NULL
 */
 Node_T Node_getParent(Node_T n);
-
 
 /*
   Returns a string representation for n, 
