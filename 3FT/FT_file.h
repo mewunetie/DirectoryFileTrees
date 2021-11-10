@@ -29,7 +29,8 @@ typedef struct file* File_T;
    do not point to any children.
 */
 
-File_T File_create(const char* dir, File_T parent);
+File_T File_create(const char* dir, File_T parent, void* contents,
+   size_t length);
 
 /*
   Destroys the entire hierarchy of Files rooted at n,
