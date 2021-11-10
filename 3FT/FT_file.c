@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* FT_file.h.c                                                          */
+/* FT_file.c                                                          */
 /* Authors: Misrach Ewunetie, Shruti Roy                              */
 /*--------------------------------------------------------------------*/
 
@@ -13,7 +13,7 @@
 #include "FT_node.h"
 
 /*
-   A File structure represents a directory in the directory tree
+   A File structure represents a file in the directory tree
 */
 struct file {
    /* the full path of this directory */
@@ -80,6 +80,8 @@ File_T File_create(const char* dir, Node_T parent, void* contents
 
    memcpy(new->contents, contents, length);
 
+   new->length = length;
+   
    if (parent != NULL) {
        result = Node_linkChild(parent, new, file);
        if(result != SUCCESS)
@@ -129,6 +131,35 @@ Node_T File_getParent(File_T n) {
    assert(n != NULL);
 
    return n->parent;
+}
+
+/* see FT_file.h for specification */
+void* File_getContents(File_T n) {
+   void* contents;
+
+   assert(n != NULL);
+
+   contents = malloc(n->length);
+   if (contents == NULL)
+      return NULL;
+
+   memcpy(contents, n->contents, n->length);
+   return contents;
+}
+
+/* see FT_file.h for specification */
+void* File_replaceContents(File_T n, void *contents, size_t length) {
+   void* original;
+   assert(n != NULL);
+
+   original = n->contents;
+
+   n->contents = malloc(length);
+   if (n->contents == NULL)
+      return NULL;
+
+   memcpy(n->contents, contents, length);
+   return original;
 }
 
 /*
