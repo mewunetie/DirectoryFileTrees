@@ -30,15 +30,11 @@ typedef struct file* File_T;
    The new structure is initialized to have its path as the parent's
    path (if it exists) prefixed to the directory string parameter,
    separated by a slash. It is also initialized with its parent link
-   as the parent parameter value, and the parent itself is changed
+   as the parent parameter value, but the parent itself is not changed
    to link to the new node.  The children links are initialized but
-   do not point to any children. status is changed to reflect the result
-   of the function, i.e. SUCCESS if successful, ALREADY_IN_TREE if a 
-   directory already exists at that path, MEMORY_ERROR if unable
-   to allocate some memory, and PARENT_CHILD_ERROR if unable to link
-   the parent to its child.
+   do not point to any children.
 */
-Node_T Node_create(const char* dir, Node_T parent, int *status);
+Node_T Node_create(const char* dir, Node_T parent);
 
 /*
   Destroys the entire hierarchy of nodes rooted at n,
@@ -124,15 +120,12 @@ char* Node_toString(Node_T n);
    The new structure is initialized to have its path as the parent's
    path (if it exists) prefixed to the directory string parameter,
    separated by a slash. It is also initialized with its parent link
-   as the parent parameter value, and the parent itself is changed
-   to link to the new File. status is changed to the result of the
-   function, i.e. SUCCESS if successful, ALREADY_IN_TREE if the file
-   already exists at that path, MEMORY_ERROR if it cannot allocate some
-   memory, and PARENT_CHILD_ERROR if a parent cannot link to the child.
+   as the parent parameter value, but the parent itself is not changed
+   to link to the new File.
 */
 
 File_T File_create(const char* dir, Node_T parent, void* contents,
-                   size_t length, int *status);
+                   size_t length);
 
 /*
   Destroys the file n.
