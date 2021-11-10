@@ -10,6 +10,10 @@
 
 #include "dynarray.h"
 #include "FT_directory.h"
+<<<<<<< HEAD
+=======
+#include "FT_file.h"
+>>>>>>> 33a3d10995fac63446f74ad51a6293a1742b639f
 
 /*
    A node structure represents a directory in the directory tree
