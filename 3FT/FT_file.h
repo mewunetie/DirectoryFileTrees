@@ -25,12 +25,14 @@ typedef struct file* File_T;
    path (if it exists) prefixed to the directory string parameter,
    separated by a slash. It is also initialized with its parent link
    as the parent parameter value, and the parent itself is changed
-   to link to the new File.  The children links are initialized but
-   do not point to any children.
+   to link to the new File. status is changed to the result of the
+   function, i.e. SUCCESS if successful, ALREADY_IN_TREE if the file
+   already exists at that path, MEMORY_ERROR if it cannot allocate some
+   memory, and PARENT_CHILD_ERROR if a parent cannot link to the child.
 */
 
 File_T File_create(const char* dir, Node_T parent, void* contents,
-   size_t length);
+                   size_t length, int *status);
 
 /*
   Destroys the file n.
