@@ -11,7 +11,6 @@
 #include "dynarray.h"
 #include "FT_directory.h"
 #include "FT_file.h"
-#include "checkerDT.h"
 
 /*
    A node structure represents a directory in the directory tree
