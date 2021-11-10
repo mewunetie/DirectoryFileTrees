@@ -1,10 +1,10 @@
 /*--------------------------------------------------------------------*/
-/* node.h                                                             */
-/* Author: Christopher Moretti                                        */
+/* FT_directory.h                                                     */
+/* Author: Shruti Roy, Misrach Ewunetie                               */
 /*--------------------------------------------------------------------*/
 
-#ifndef NODE_INCLUDED
-#define NODE_INCLUDED
+#ifndef DIR_INCLUDED
+#define DIR_INCLUDED
 
 #include <stddef.h>
 #include "a4def.h"
@@ -12,6 +12,7 @@
 /*
    a Node_T is an object that contains a path payload and references to
    the node's parent (if it exists) and children (if they exist).
+   Children may be either files, or other node directories.
 */
 typedef struct node* Node_T;
 
@@ -26,10 +27,13 @@ typedef struct node* Node_T;
    separated by a slash. It is also initialized with its parent link
    as the parent parameter value, and the parent itself is changed
    to link to the new node.  The children links are initialized but
-   do not point to any children.
+   do not point to any children. status is changed to reflect the result
+   of the function, i.e. SUCCESS if successful, ALREADY_IN_TREE if a 
+   directory already exists at that path, MEMORY_ERROR if unable
+   to allocate some memory, and PARENT_CHILD_ERROR if unable to link
+   the parent to its child.
 */
-
-Node_T Node_create(const char* dir, Node_T parent);
+Node_T Node_create(const char* dir, Node_T parent, int *status);
 
 /*
   Destroys the entire hierarchy of nodes rooted at n,

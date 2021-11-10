@@ -35,7 +35,7 @@ struct node {
 
 
 /* see node.h for specification */
-Node_T Node_create(const char* dir, Node_T parent){
+Node_T Node_create(const char* dir, Node_T parent, int *status){
    Node_T new;
    int result;
    char* path;
@@ -43,8 +43,10 @@ Node_T Node_create(const char* dir, Node_T parent){
    assert(dir != NULL);
 
    new = malloc(sizeof(struct node));
-   if(new == NULL)
+   if(new == NULL) {
+      *status = MEMORY_ERROR;
       return NULL;
+   }
 
    if(parent == NULL)
       path = malloc(strlen(dir)+1);
@@ -53,6 +55,7 @@ Node_T Node_create(const char* dir, Node_T parent){
 
    if(path == NULL) {
       free(new);
+      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -77,6 +80,7 @@ Node_T Node_create(const char* dir, Node_T parent){
       }
       free(new->path);
       free(new);
+      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -84,6 +88,7 @@ Node_T Node_create(const char* dir, Node_T parent){
       result = Node_linkChild(parent, new);
       if(result != SUCCESS)
          (void) Node_destroy(new);
+      *status = result;
    }
 
    return new;
