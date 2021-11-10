@@ -11,16 +11,26 @@
 
 #include "dynarray.h"
 #include "ft.h"
-#include "FT_node.h"
+#include "FT_directory.h"
+#include "FT_file.h"
 #include "checkerDT.h"
 
 /* A Directory Tree is an AO with 3 state variables: */
 /* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
-static boolean isInitialized;
+static boolean isInitializedDir;
 /* a pointer to the root node in the hierarchy */
-static Node_T root;
+static Node_T rootDir;
 /* a counter of the number of nodes in the hierarchy */
-static size_t count;
+static size_t countDir;
+
+/* A Directory Tree is an AO with 3 state variables: */
+/* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
+static boolean isInitializedFile;
+/* a pointer to the root node in the hierarchy */
+static File_T rootFile;
+/* a counter of the number of nodes in the hierarchy */
+static size_t countFile;
+
 
 
 
@@ -66,7 +76,7 @@ static Node_T FT_traversePath(char* path, Node_T curr) {
    and returns PARENT_CHILD_ERROR, otherwise, returns SUCCESS.
 */
 
-static int DT_linkParentToChild(Node_T parent, Node_T child) {
+static int FT_linkParentToChild(Node_T parent, Node_T child) {
 
    assert(parent != NULL);
 
@@ -161,14 +171,14 @@ int FT_insertDir(char *path)
    Node_T curr;
    int result;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    assert(path != NULL);
 
    if(!isInitialized)
       return INITIALIZATION_ERROR;
    curr = FT_traversePath(path, root);
    result = FT_insertRestOfPath(path, curr);
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    return result;
 }
 
@@ -177,7 +187,7 @@ boolean FT_containsDir(char *path)
     Node_T curr;
    boolean result;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    assert(path != NULL);
 
    if(!isInitialized)
@@ -193,7 +203,7 @@ boolean FT_containsDir(char *path)
    else
       result = TRUE;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    return result;
 }
 
@@ -205,7 +215,7 @@ int FT_rmDir(char *path)
     Node_T curr, parent;
    int result;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    assert(path != NULL);
    
 
@@ -232,12 +242,106 @@ int FT_rmDir(char *path)
       result = NO_SUCH_PATH;
    }
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
    return result;
-
 }
+
+static Node_T FT_traversePath(char* path, File_T curr) {
+   File_T found;
+   size_t i;
+
+   assert(path != NULL);
+
+   if(curr == NULL)
+      return NULL;
+
+   else if(!strcmp(path, File_getPath(curr)))
+      return curr;
+
+   return NULL;
+}
+
+
+static int FT_insertPathHelper(char* path, File_T parent) {
+
+   File_T curr = parent;
+   File_T firstNew = NULL;
+   File_T new;
+   char* copyPath;
+   char* dirToken;
+   int result;
+   size_t newCount = 0;
+
+   assert(path != NULL);
+
+   if(curr == NULL) {
+      if(root != NULL) {
+         return CONFLICTING_PATH;
+      }
+   }
+   else if(!strcmp(path, File_getPath(curr)))
+         return ALREADY_IN_TREE;
+
+
+   copyPath = malloc(strlen(path)+1);
+   
+   if(copyPath == NULL)
+      return MEMORY_ERROR;
+
+   strcpy(copyPath, path);
+
+   dirToken = strtok(copyPath, "/");
+
+   while(dirToken != NULL) {
+      new = File_create(dirToken, curr);
+
+      if(new == NULL) {
+         if(firstNew != NULL)
+            (void) File_destroy(firstNew);
+         free(copyPath);
+         return MEMORY_ERROR;
+      }
+
+      newCount++;
+
+      if(firstNew == NULL)
+         firstNew = new;
+
+      curr = new;
+      dirToken = strtok(NULL, "/");
+   }
+
+   free(copyPath);
+
+    count += newCount;
+
+   if(parent == NULL) {
+      root = firstNew;
+      return SUCCESS;
+   }
+
+      return result;
+}
+
+
+
+
 int FT_insertFile(char *path, void *contents, size_t length)
 {
+    File_T curr;
+   int result;
+
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   assert(path != NULL);
+
+   if(!isInitialized)
+      return INITIALIZATION_ERROR;
+      
+   curr = FT_traversePath(path, root);
+   result = FT_insertPathHelper(path, curr);
+
+   assert(CheckerDT_isValid(isInitialized,rootDir,count));
+   return result;
 
 }
 boolean FT_containsFile(char *path)
