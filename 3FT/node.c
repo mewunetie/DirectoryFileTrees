@@ -386,8 +386,6 @@ Node_T File_getParent(File_T n) {
 
 /* see FT_file.h for specification */
 void* File_getContents(File_T n) {
-   void* contents;
-
    assert(n != NULL);
 
    return n->contents;
