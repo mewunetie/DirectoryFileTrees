@@ -640,23 +640,20 @@ int FT_destroy(void)
    inserting each payload to DynArray_T d beginning at index i.
    Returns the next unused index in d after the insertion(s).
 */
-static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
+static void FT_preOrderTraversal(Node_T n, DynArray_T d) {
    size_t c;
 
    assert(d != NULL);
 
    if(n != NULL) {
-      (void) DynArray_set(d, i, Node_getPath(n));
-      i++;
+      (void) DynArray_add(d, Node_getPath(n));
       for(c = 0; c < Node_getNumChildren(n, TRUE); c++) {
-         DynArray_set(d, i, File_getPath(Node_getFileChild(n, c)));
-         i++;
+         DynArray_add(d, File_getPath(Node_getFileChild(n, c)));
       }
       for(c = 0; c < Node_getNumChildren(n, FALSE); c++) {
-         i = FT_preOrderTraversal(Node_getDirChild(n, c), d, i);
+         FT_preOrderTraversal(Node_getDirChild(n, c), d);
       }
    }
-   return i;
 }
 
 /*
@@ -695,7 +692,7 @@ char *FT_toString(void)
       return NULL;
 
    nodes = DynArray_new(count);
-   (void) FT_preOrderTraversal(root, nodes, 0);
+   (void) FT_preOrderTraversal(root, nodes);
 
    DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
                 (void*) &totalStrlen);
