@@ -181,7 +181,7 @@ int FT_insertDir(char *path)
 {
    Node_T curr;
    int result;
-   boolean *isFile;
+   boolean *isFile = FALSE;
 
    assert(path != NULL);
 
@@ -233,7 +233,7 @@ boolean FT_containsDir(char *path)
 int FT_rmDir(char *path)
 {
     Node_T curr, parent;
-    boolean *isFile;
+    boolean *isFile = FALSE;
 
     assert(path != NULL);
    
@@ -275,7 +275,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
     char *parentPath;
     int result;
     int exists;
-    boolean *isFile;
+    boolean *isFile = FALSE;
 
     assert(path != NULL);
     
@@ -342,7 +342,7 @@ boolean FT_containsFile(char *path)
 {
     Node_T parent;
     boolean result;
-    boolean *isFile;
+    boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
 
@@ -389,7 +389,7 @@ int FT_rmFile(char *path)
     File_T curr;
     Node_T parent;
     int result;
-    boolean *isFile;
+    boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
     size_t *childID;
@@ -449,7 +449,7 @@ void *FT_getFileContents(char *path)
     File_T curr;
     Node_T parent;
     int result;
-    boolean *isFile;
+    boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
     size_t *childID;
@@ -501,7 +501,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
   File_T curr;
     Node_T parent;
     int result;
-    boolean *isFile;
+    boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
     size_t *childID;
@@ -552,7 +552,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     Node_T parent;
     File_T curr;
     int result;
-    boolean *isFile;
+    boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
     size_t *childID;
