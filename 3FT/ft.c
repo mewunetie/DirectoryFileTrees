@@ -338,7 +338,10 @@ int FT_insertFile(char *path, void *contents, size_t length)
       }
     }
 
+    free(parentPath);
+
     exists = (Node_hasFileChild(current, path, NULL) || Node_hasDirChild(current, path, NULL));
+
 
     if (exists) {
        return ALREADY_IN_TREE;
@@ -393,6 +396,7 @@ boolean FT_containsFile(char *path)
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
           result = Node_hasFileChild(parent, path, NULL);
+          free(parentPath);
           if (result) {
              return TRUE;
           }
@@ -442,6 +446,7 @@ int FT_rmFile(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
 
@@ -503,6 +508,7 @@ void *FT_getFileContents(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
              curr = Node_getFileChild(parent, childID);
@@ -556,6 +562,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
              curr = Node_getFileChild(parent, childID);
@@ -610,6 +617,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     }
 
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
              curr = Node_getFileChild(parent, childID);
@@ -717,6 +725,7 @@ char *FT_toString(void)
    if (nodes == NULL) {
       return NULL;
    }
+
    (void) FT_preOrderTraversal(root, nodes);
 
    DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
