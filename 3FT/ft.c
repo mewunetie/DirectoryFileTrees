@@ -28,7 +28,6 @@ static size_t count;
    Starting at the parameter curr, traverses as far down
    the hierarchy as possible while still matching the path
    parameter.
-
    Returns a pointer to the farthest matching node down that path,
    or NULL if there is no node in curr's hierarchy that matches
    a prefix of the path
@@ -57,7 +56,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
                                 Node_getDirChild(curr, i), isFile, foundFullPath);
          if(found != NULL)
             return found;
-         if (isFile) {
+         if (*isFile) {
             return NULL;
          }
       }
@@ -65,11 +64,14 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
          fileFound = Node_getFileChild(curr, i);
 
          if (fileFound != NULL) {
-             if(!strcmp(path,File_getPath(fileFound))) {
-              *foundFullPath = TRUE;
+             if(!strncmp(path, File_getPath(fileFound),
+                              strlen(File_getPath(fileFound)))) {
+                *isFile = TRUE;
+                if(!strcmp(path,File_getPath(fileFound))) {
+                   *foundFullPath = TRUE;
+                }
+                return NULL;
              }
-            *isFile = TRUE;
-            return NULL;
          }
       }
       return curr;
@@ -81,7 +83,6 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
 /*
    Given a prospective parent and child node,
    adds child to parent's children list, if possible
-
    If not possible, destroys the hierarchy rooted at child
    and returns PARENT_CHILD_ERROR, otherwise, returns SUCCESS.
 */
@@ -101,15 +102,11 @@ static int FT_linkParentToChild(Node_T parent, Node_T child) {
 /*
    Inserts a new path into the tree rooted at parent, or, if
    parent is NULL, as the root of the data structure.
-
    If a node representing path already exists, returns ALREADY_IN_TREE
-
    If there is an allocation error in creating any of the new nodes or
    their fields, returns MEMORY_ERROR
-
    If there is an error linking any of the new nodes,
    returns PARENT_CHILD_ERROR
-
    Otherwise, returns SUCCESS
 */
 static int FT_insertRestOfPath(char* path, Node_T parent) {
@@ -365,6 +362,11 @@ int FT_insertFile(char *path, void *contents, size_t length)
 
     result = File_linkChild(current, file);
 
+    if(result == SUCCESS)
+       count++;
+    else
+       File_destroy(file);
+    
     return result;
 }
 
@@ -685,20 +687,22 @@ int FT_destroy(void)
    inserting each payload to DynArray_T d beginning at index i.
    Returns the next unused index in d after the insertion(s).
 */
-static void FT_preOrderTraversal(Node_T n, DynArray_T d) {
+static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
    size_t c;
 
    assert(d != NULL);
 
    if(n != NULL) {
-      (void) DynArray_add(d, Node_getPath(n));
+      (void) DynArray_set(d, i++, Node_getPath(n));
       for(c = 0; c < Node_getNumChildren(n, TRUE); c++) {
-         DynArray_add(d, File_getPath(Node_getFileChild(n, c)));
+         DynArray_set(d, i++, File_getPath(Node_getFileChild(n, c)));
       }
       for(c = 0; c < Node_getNumChildren(n, FALSE); c++) {
-         FT_preOrderTraversal(Node_getDirChild(n, c), d);
+         i = FT_preOrderTraversal(Node_getDirChild(n, c), d, i);
       }
    }
+
+   return i;
 }
 
 /*
@@ -736,16 +740,12 @@ char *FT_toString(void)
    if(!isInitialized)
       return NULL;
 
-   if(root == NULL) {
-      return "";
-   }
-
    nodes = DynArray_new(count);
    if (nodes == NULL) {
       return NULL;
    }
 
-   (void) FT_preOrderTraversal(root, nodes);
+   (void) FT_preOrderTraversal(root, nodes, 0);
 
    DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
                 (void*) &totalStrlen);
