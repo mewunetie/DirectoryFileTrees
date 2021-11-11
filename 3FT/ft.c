@@ -58,7 +58,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile) {
          }
 
          found = FT_traversePath(path,
-                                Node_getDirChild(curr, i), &isFile);
+                                Node_getDirChild(curr, i), isFile);
          if(found != NULL)
             return found;
 
@@ -187,11 +187,16 @@ int FT_insertDir(char *path)
 
    if(!isInitialized)
       return INITIALIZATION_ERROR;
-   curr = FT_traversePath(path, root, &isFile);
+   curr = FT_traversePath(path, root, isFile);
 
    
-   if (curr == NULL && isFile) {
-      return NOT_A_DIRECTORY;
+   if (curr == NULL) {
+      if (isFile) {
+         return NOT_A_DIRECTORY;
+      }
+      if (root != NULL) {
+         return CONFLICTING_PATH;
+      }
    }
 
    result = FT_insertRestOfPath(path, curr);
@@ -201,7 +206,7 @@ int FT_insertDir(char *path)
 
 boolean FT_containsDir(char *path)  
 {
-    Node_T curr;
+   Node_T curr;
    boolean result;
 
 
@@ -210,18 +215,16 @@ boolean FT_containsDir(char *path)
    if(!isInitialized)
       return FALSE;
 
-   curr = FT_traversePath(path, root, result);
+   curr = FT_traversePath(path, root, &result);
 
 
-   if(curr == NULL)
-      result = FALSE;
-   else if(strcmp(path, Node_getPath(curr)))
-      result = FALSE;
-   else
-      result = TRUE;
-
-
-   return result;
+   if(curr == NULL) {
+      return FALSE;
+   }
+   if(!strcmp(path, Node_getPath(curr)))
+      return TRUE;
+   
+   return FALSE;
 }
 
 
@@ -230,7 +233,6 @@ boolean FT_containsDir(char *path)
 int FT_rmDir(char *path)
 {
     Node_T curr, parent;
-    int result;
     boolean *isFile;
 
     assert(path != NULL);
@@ -239,19 +241,17 @@ int FT_rmDir(char *path)
     if(!isInitialized)
       return INITIALIZATION_ERROR;
 
-    curr = FT_traversePath(path, root, &isFile);
+    curr = FT_traversePath(path, root, isFile);
     if(curr == NULL) {
        if(isFile) {
           return NOT_A_DIRECTORY;
        }
-       result =  NO_SUCH_PATH;
+       return  NO_SUCH_PATH;
     }
       
-    else {
-         parent = Node_getParent(curr);
 
-    if(!strcmp(path,Node_getPath(curr))) 
-   {
+    if(!strcmp(path,Node_getPath(curr))) {
+      parent = Node_getParent(curr);
       if(parent == NULL)
          root = NULL;
       else {
@@ -259,14 +259,11 @@ int FT_rmDir(char *path)
       }
 
       count -= Node_destroy(curr);
-      result = SUCCESS;
+      return SUCCESS;
    }
 
-    else
-      result = NO_SUCH_PATH;
-   }
 
-    return result;
+   return NO_SUCH_PATH;
 }
 
 
@@ -298,9 +295,9 @@ int FT_insertFile(char *path, void *contents, size_t length)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
-    current = FT_traversePath(parentPath, root, &isFile);
+    current = FT_traversePath(parentPath, root, isFile);
 
     if (current == NULL) {
         if (root != NULL) {
@@ -310,7 +307,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
         if (result != SUCCESS) {
           return result;
        }
-        current = FT_traversePath(parentPath, current, &isFile);
+        current = FT_traversePath(parentPath, current, isFile);
     }
 
     else {
@@ -320,7 +317,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
           if (result != SUCCESS) {
              return result;
           }
-          current = FT_traversePath(parentPath, current, &isFile);
+          current = FT_traversePath(parentPath, current, isFile);
       }
     }
 
@@ -368,9 +365,9 @@ boolean FT_containsFile(char *path)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
-    parent = FT_traversePath(parentPath, root, &isFile);
+    parent = FT_traversePath(parentPath, root, isFile);
 
     if (parent == NULL) {
         return FALSE;
@@ -417,9 +414,9 @@ int FT_rmFile(char *path)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
-    parent = FT_traversePath(parentPath, root, &isFile);
+    parent = FT_traversePath(parentPath, root, isFile);
 
     if (parent == NULL) {
         return NO_SUCH_PATH;
@@ -479,7 +476,7 @@ void *FT_getFileContents(char *path)
     strncpy(parentPath, path, lastOccurance - path);
     strcat(parentPath, '\0');
    
-    parent = FT_traversePath(parentPath, root, &isFile);
+    parent = FT_traversePath(parentPath, root, isFile);
 
     if (parent == NULL) {
         return NULL;
@@ -529,9 +526,9 @@ void *FT_replaceFileContents(char *path, void *newContents,
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
-    parent = FT_traversePath(parentPath, root, &isFile);
+    parent = FT_traversePath(parentPath, root, isFile);
 
     if (parent == NULL) {
         return NULL;
@@ -554,9 +551,8 @@ void *FT_replaceFileContents(char *path, void *newContents,
 int FT_stat(char *path, boolean *type, size_t *length)
 {
     Node_T parent;
-    Node_T directory;
     File_T curr;
-    boolean result;
+    int result;
     boolean *isFile;
     char *lastOccurance;
     char *parentPath;
@@ -584,9 +580,9 @@ int FT_stat(char *path, boolean *type, size_t *length)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
-    parent = FT_traversePath(parentPath, root, &isFile);
+    parent = FT_traversePath(parentPath, root, isFile);
 
     if (parent == NULL) {
         return NO_SUCH_PATH;
