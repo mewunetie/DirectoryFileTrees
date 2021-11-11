@@ -57,7 +57,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
                                 Node_getDirChild(curr, i), isFile, foundFullPath);
          if(found != NULL)
             return found;
-         if (isFile) {
+         if (*isFile) {
             return NULL;
          }
       }
@@ -65,11 +65,14 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
          fileFound = Node_getFileChild(curr, i);
 
          if (fileFound != NULL) {
-             if(!strcmp(path,File_getPath(fileFound))) {
-              *foundFullPath = TRUE;
+             if(!strncmp(path, File_getPath(fileFound),
+                              strlen(File_getPath(fileFound)))) {
+                *isFile = TRUE;
+                if(!strcmp(path,File_getPath(fileFound))) {
+                   *foundFullPath = TRUE;
+                }
+                return NULL;
              }
-            *isFile = TRUE;
-            return NULL;
          }
       }
       return curr;
@@ -365,6 +368,11 @@ int FT_insertFile(char *path, void *contents, size_t length)
 
     result = File_linkChild(current, file);
 
+    if(result == SUCCESS)
+       count++;
+    else
+       File_destroy(file);
+    
     return result;
 }
 
@@ -685,20 +693,22 @@ int FT_destroy(void)
    inserting each payload to DynArray_T d beginning at index i.
    Returns the next unused index in d after the insertion(s).
 */
-static void FT_preOrderTraversal(Node_T n, DynArray_T d) {
+static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
    size_t c;
 
    assert(d != NULL);
 
    if(n != NULL) {
-      (void) DynArray_add(d, Node_getPath(n));
+      (void) DynArray_set(d, i++, Node_getPath(n));
       for(c = 0; c < Node_getNumChildren(n, TRUE); c++) {
-         DynArray_add(d, File_getPath(Node_getFileChild(n, c)));
+         DynArray_set(d, i++, File_getPath(Node_getFileChild(n, c)));
       }
       for(c = 0; c < Node_getNumChildren(n, FALSE); c++) {
-         FT_preOrderTraversal(Node_getDirChild(n, c), d);
+         i = FT_preOrderTraversal(Node_getDirChild(n, c), d, i);
       }
    }
+
+   return i;
 }
 
 /*
@@ -741,7 +751,7 @@ char *FT_toString(void)
       return NULL;
    }
 
-   (void) FT_preOrderTraversal(root, nodes);
+   (void) FT_preOrderTraversal(root, nodes, 0);
 
    DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
                 (void*) &totalStrlen);
