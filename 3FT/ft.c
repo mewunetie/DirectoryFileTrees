@@ -59,7 +59,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
          fileFound = Node_getFileChild(curr, i);
 
          if (fileFound != NULL) {
-             if(!strcmp(path,File_getPath(curr))) {
+             if(!strcmp(path,File_getPath(fileFound))) {
               *foundFullPath = TRUE;
              }
             *isFile = TRUE;
