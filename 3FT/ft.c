@@ -740,10 +740,6 @@ char *FT_toString(void)
    if(!isInitialized)
       return NULL;
 
-   if (root == NULL) {
-      return "";
-   }
-
    nodes = DynArray_new(count);
    if (nodes == NULL) {
       return NULL;
