@@ -49,7 +49,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile) {
    if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
       for(i = 0; i < Node_getNumChildren(curr, 0); i++) {
          found = FT_traversePath(path,
-                                Node_getDirChild(curr, i), isFile);
+                                Node_getDirChild(curr, i), &isFile);
          if(found != NULL)
             return found;
       }
