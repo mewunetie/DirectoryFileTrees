@@ -340,22 +340,9 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
    strcat(path, dir);
 
    new->path = path;
-
    new->parent = parent;
-
-   if (contents != NULL) {
-      new->contents = malloc(length);
-
-      if(new->contents == NULL) {
-         free(new->path);
-         free(new);
-         return NULL;
-      }
-
-      memcpy(new->contents, contents, length);
-   }
-   else
-      new->contents = NULL;
+   new->contents = contents;
+   new->length = length;
    
    return new;
 }
@@ -403,12 +390,7 @@ void* File_getContents(File_T n) {
 
    assert(n != NULL);
 
-   contents = malloc(n->length);
-   if (contents == NULL || n->contents == NULL)
-      return NULL;
-
-   memcpy(contents, n->contents, n->length);
-   return contents;
+   return n->contents;
 }
 
 /* see FT_file.h for specification */
@@ -418,11 +400,8 @@ void* File_replaceContents(File_T n, void *contents, size_t length) {
 
    original = n->contents;
 
-   n->contents = malloc(length);
-   if (n->contents == NULL)
-      return NULL;
+   n->contents = contents;
 
-   memcpy(n->contents, contents, length);
    return original;
 }
 
