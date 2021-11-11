@@ -352,13 +352,13 @@ boolean FT_containsFile(char *path)
     lastOccurance = strrchr(path, '/');
 
     if (lastOccurance == NULL) {
-       return CONFLICTING_PATH;
+       return FALSE;
     }
 
     parentPath = malloc((lastOccurance - path + 1));
 
     if (parentPath == NULL) {
-       return MEMORY_ERROR;
+       return FALSE;
     }
 
     strncpy(parentPath, path, lastOccurance - path);
