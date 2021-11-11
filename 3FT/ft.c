@@ -181,7 +181,7 @@ int FT_insertDir(char *path)
 {
    Node_T curr;
    int result;
-   boolean isFile;
+   boolean *isFile;
 
    assert(path != NULL);
 
@@ -341,7 +341,6 @@ int FT_insertFile(char *path, void *contents, size_t length)
 boolean FT_containsFile(char *path)
 {
     Node_T parent;
-    File_T curr;
     boolean result;
     boolean *isFile;
     char *lastOccurance;
@@ -474,7 +473,7 @@ void *FT_getFileContents(char *path)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, '\0');
+    strcat(parentPath, "");
    
     parent = FT_traversePath(parentPath, root, isFile);
 
