@@ -452,18 +452,20 @@ int FT_rmFile(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
              curr = Node_getFileChild(parent, childID);
              File_unlinkChild(parent, curr);
              File_destroy(curr);
+             free(parentPath);
              return SUCCESS;
           }
           if (result == -1) {
+             free(parentPath);
              return MEMORY_ERROR;
           }
           if(Node_hasDirChild(parent, path, NULL)) {
+             free(parentPath);
              return NOT_A_FILE;
           }
       }
