@@ -343,16 +343,20 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
 
    new->parent = parent;
 
-   new->contents = malloc(length);
+   if (contents != NULL) {
+      new->contents = malloc(length);
 
-   if(new->contents == NULL) {
-      free(new->path);
-      free(new);
-      return NULL;
+      if(new->contents == NULL) {
+         free(new->path);
+         free(new);
+         return NULL;
+      }
+
+      memcpy(new->contents, contents, length);
    }
-
-   memcpy(new->contents, contents, length);
-
+   else
+      new->contents = NULL;
+   
    return new;
 }
 
@@ -400,7 +404,7 @@ void* File_getContents(File_T n) {
    assert(n != NULL);
 
    contents = malloc(n->length);
-   if (contents == NULL)
+   if (contents == NULL || n->contents == NULL)
       return NULL;
 
    memcpy(contents, n->contents, n->length);
