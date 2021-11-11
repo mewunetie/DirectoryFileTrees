@@ -230,7 +230,7 @@ boolean FT_containsDir(char *path)
    if(curr == NULL) {
       return FALSE;
    }
-   if(!strcmp(path, Node_getPath(curr)))
+   if(foundFullPath)
       return TRUE;
    
    return FALSE;
