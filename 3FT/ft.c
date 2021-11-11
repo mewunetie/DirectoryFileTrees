@@ -49,19 +49,18 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile) {
 
    if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
       for(i = 0; i < Node_getNumChildren(curr, 0); i++) {
-
+         found = FT_traversePath(path,
+                                Node_getDirChild(curr, i), isFile);
+         if(found != NULL)
+            return found;
+      }
+      for(i = 0; i < Node_getNumChildren(curr, 1); i++) {
          fileFound = Node_getFileChild(curr, i);
 
          if (fileFound != NULL) {
             *isFile = TRUE;
             return NULL;
          }
-
-         found = FT_traversePath(path,
-                                Node_getDirChild(curr, i), isFile);
-         if(found != NULL)
-            return found;
-
       }
       return curr;
    }
@@ -423,6 +422,7 @@ int FT_rmFile(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
 
@@ -483,6 +483,7 @@ void *FT_getFileContents(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
@@ -535,6 +536,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
@@ -588,6 +590,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     }
 
        if (!strcmp(parentPath, Node_getPath(parent))) {
+          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
