@@ -392,7 +392,8 @@ int FT_rmFile(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID = 0;
+    size_t *childID;
+    *childID = 0;
 
     assert(path != NULL);
    
@@ -452,7 +453,8 @@ void *FT_getFileContents(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID = 0;
+    size_t *childID;
+    *childID = 0;
 
     assert(path != NULL);
    
@@ -504,7 +506,8 @@ void *FT_replaceFileContents(char *path, void *newContents,
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID = 0;
+    size_t *childID;
+    *childID = 0;
 
     assert(path != NULL);
    
@@ -555,7 +558,8 @@ int FT_stat(char *path, boolean *type, size_t *length)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID = 0;
+    size_t *childID;
+    *childID = 0;
 
     assert(path != NULL);
 
