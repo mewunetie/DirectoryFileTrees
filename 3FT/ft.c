@@ -391,7 +391,7 @@ int FT_rmFile(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
+    size_t *childID = 0;
 
     assert(path != NULL);
    
@@ -422,7 +422,6 @@ int FT_rmFile(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
 
@@ -452,7 +451,7 @@ void *FT_getFileContents(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
+    size_t *childID = 0;
 
     assert(path != NULL);
    
@@ -483,7 +482,6 @@ void *FT_getFileContents(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
@@ -505,7 +503,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
+    size_t *childID = 0;
 
     assert(path != NULL);
    
@@ -536,7 +534,6 @@ void *FT_replaceFileContents(char *path, void *newContents,
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
@@ -557,7 +554,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
+    size_t *childID = 0;
 
     assert(path != NULL);
 
@@ -590,7 +587,6 @@ int FT_stat(char *path, boolean *type, size_t *length)
     }
 
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          *childID = 0;
           result = Node_hasChild(parent, path, childID, TRUE);
           if (result) {
              curr = Node_getFileChild(parent, *childID);
