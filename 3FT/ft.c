@@ -227,7 +227,7 @@ boolean FT_containsDir(char *path)
    curr = FT_traversePath(path, root, &result, &foundFullPath);
 
 
-   if(curr == NULL) {
+   if(curr == NULL || result) {
       return FALSE;
    }
 
