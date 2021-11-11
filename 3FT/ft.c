@@ -37,10 +37,12 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
    Node_T found;
    File_T fileFound;
    size_t i;
-   *isFile = FALSE;
 
    assert(path != NULL);
+   assert(isFile != NULL);
+   assert(foundFullPath != NULL);
 
+   *isFile = FALSE;
    if(curr == NULL)
       return NULL;
 
