@@ -312,16 +312,19 @@ int FT_insertFile(char *path, void *contents, size_t length)
    
     current = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
-    if(isFile) 
+    if(isFile) {
+       free(parentPath);
        return NOT_A_DIRECTORY;
-    
+    }
 
     if (current == NULL) {
         if (root != NULL) {
+           free(parentPath);
           return CONFLICTING_PATH;
        }
          result = FT_insertRestOfPath(parentPath, current);
         if (result != SUCCESS) {
+          free(parentPath);
           return result;
        }
         current = FT_traversePath(parentPath, current, &isFile, &foundFullPath);
@@ -332,6 +335,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
           result = FT_insertRestOfPath(parentPath, current);
 
           if (result != SUCCESS) {
+             free(parentPath);
              return result;
           }
           current = FT_traversePath(parentPath, current, &isFile, &foundFullPath);
@@ -390,7 +394,8 @@ boolean FT_containsFile(char *path)
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
     if (parent == NULL) {
-        return FALSE;
+       free(parentPath);
+      return FALSE;
     }
 
     else {
@@ -441,6 +446,7 @@ int FT_rmFile(char *path)
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
     if (parent == NULL) {
+        free(parentPath);
         return NO_SUCH_PATH;
     }
 
@@ -449,7 +455,6 @@ int FT_rmFile(char *path)
           free(parentPath);
           result = Node_hasFileChild(parent, path, &childID);
           if (result) {
-
              curr = Node_getFileChild(parent, childID);
              File_unlinkChild(parent, curr);
              File_destroy(curr);
@@ -463,7 +468,7 @@ int FT_rmFile(char *path)
           }
       }
     }
-
+    free(parentPath);
     return NO_SUCH_PATH;
 }
 
@@ -503,6 +508,7 @@ void *FT_getFileContents(char *path)
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
     if (parent == NULL) {
+       free(parentPath);
         return NULL;
     }
 
@@ -517,7 +523,7 @@ void *FT_getFileContents(char *path)
       }
     }
 
-    
+    free(parentPath);
     return NULL;
 }
 
@@ -557,6 +563,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
     if (parent == NULL) {
+       free(parentPath);
         return NULL;
     }
 
@@ -571,7 +578,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
       }
     }
 
-    
+    free(parentPath);
     return NULL;
 }
 
@@ -613,6 +620,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
     if (parent == NULL) {
+        free(parentPath);
         return NO_SUCH_PATH;
     }
 
@@ -636,6 +644,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
             return MEMORY_ERROR;
       }
 
+      free(parentPath);
       return NO_SUCH_PATH;
 }
 
