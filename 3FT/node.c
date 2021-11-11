@@ -59,10 +59,8 @@ Node_T Node_create(const char* dir, Node_T parent){
    assert(dir != NULL);
 
    new = malloc(sizeof(struct node));
-   if(new == NULL) {
-      *status = MEMORY_ERROR;
+   if(new == NULL)
       return NULL;
-   }
 
    if(parent == NULL)
       path = malloc(strlen(dir)+1);
@@ -71,7 +69,6 @@ Node_T Node_create(const char* dir, Node_T parent){
 
    if(path == NULL) {
       free(new);
-      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -87,6 +84,9 @@ Node_T Node_create(const char* dir, Node_T parent){
 
    new->parent = parent;
 
+   new->fchildren = DynArray_new(0);
+   new->dchildren = DynArray_new(0);
+   
    if(new->fchildren == NULL || new->dchildren == NULL) {
       if (new->dchildren != NULL) {
           DynArray_free(new->dchildren);
@@ -96,16 +96,8 @@ Node_T Node_create(const char* dir, Node_T parent){
       }
       free(new->path);
       free(new);
-      *status = MEMORY_ERROR;
       return NULL;
    }
-
-   /* if (parent != NULL) {
-      result = Node_linkChild(parent, new);
-      if(result != SUCCESS)
-         Node_destroy(new);
-      *status = result;
-      } */
 
    return new;
 }
@@ -119,10 +111,6 @@ size_t Node_destroy(Node_T n) {
    
    assert(n != NULL);
    
-   /* if (n->parent != NULL) {
-       Node_unlinkChild(n->parent, n);
-       } */
-
    for(i = 0; i < DynArray_getLength(n->fchildren); i++)
    {
       f = DynArray_get(n->fchildren, i);
@@ -190,7 +178,7 @@ int Node_hasChild(Node_T n, const char* path, size_t* childID,
    assert(n != NULL);
    assert(path != NULL);
 
-   checker = Node_create(path, NULL, &result);
+   checker = Node_create(path, NULL);
    if(checker == NULL) {
       return -1;
    }
@@ -313,10 +301,8 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
    assert(dir != NULL);
 
    new = malloc(sizeof(struct file));
-   if(new == NULL) {
-      *status = MEMORY_ERROR;
+   if(new == NULL)
       return NULL;
-   }
 
    if(parent == NULL)
       path = malloc(strlen(dir)+1);
@@ -325,7 +311,6 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
 
    if(path == NULL) {
       free(new);
-      *status = MEMORY_ERROR;
       return NULL;
    }
 
@@ -346,18 +331,10 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
    if(new->contents == NULL) {
       free(new->path);
       free(new);
-      *status = MEMORY_ERROR;
       return NULL;
    }
 
    memcpy(new->contents, contents, length);
-
-   /* if (parent != NULL) {
-      result = Node_linkChild(parent, new, file);
-      if(result != SUCCESS)
-         (void) File_destroy(new, file);
-      *status = result;
-      } */
 
    return new;
 }
@@ -365,10 +342,6 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
 /* see FT_file.h for specification */
 void File_destroy(File_T n) {
    assert(n != NULL);
-
-   /* if (n->parent != NULL) {
-      File_unlinkChild(n->parent, n);
-      } */
 
    free(n->path);
    free(n);
