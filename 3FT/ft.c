@@ -28,6 +28,7 @@ static size_t count;
    Starting at the parameter curr, traverses as far down
    the hierarchy as possible while still matching the path
    parameter.
+
    Returns a pointer to the farthest matching node down that path,
    or NULL if there is no node in curr's hierarchy that matches
    a prefix of the path
@@ -80,6 +81,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
 /*
    Given a prospective parent and child node,
    adds child to parent's children list, if possible
+
    If not possible, destroys the hierarchy rooted at child
    and returns PARENT_CHILD_ERROR, otherwise, returns SUCCESS.
 */
@@ -99,11 +101,15 @@ static int FT_linkParentToChild(Node_T parent, Node_T child) {
 /*
    Inserts a new path into the tree rooted at parent, or, if
    parent is NULL, as the root of the data structure.
+
    If a node representing path already exists, returns ALREADY_IN_TREE
+
    If there is an allocation error in creating any of the new nodes or
    their fields, returns MEMORY_ERROR
+
    If there is an error linking any of the new nodes,
    returns PARENT_CHILD_ERROR
+
    Otherwise, returns SUCCESS
 */
 static int FT_insertRestOfPath(char* path, Node_T parent) {
@@ -729,6 +735,10 @@ char *FT_toString(void)
 
    if(!isInitialized)
       return NULL;
+
+   if(root == NULL) {
+      return "";
+   }
 
    nodes = DynArray_new(count);
    if (nodes == NULL) {
