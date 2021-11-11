@@ -741,6 +741,10 @@ char *FT_toString(void)
       return NULL;
    }
 
+   if(root == NULL) {
+      return "";
+   }
+
    (void) FT_preOrderTraversal(root, nodes);
 
    DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
