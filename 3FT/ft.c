@@ -327,7 +327,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
        return ALREADY_IN_TREE;
     }
 
-    file = File_create(path, current, contents, length);
+    file = File_create(lastOccurance++, current, contents, length);
 
     if(file == NULL) {
        return MEMORY_ERROR;
