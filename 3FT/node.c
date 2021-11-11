@@ -399,18 +399,15 @@ void* File_replaceContents(File_T n, void *contents, size_t length) {
    original = n->contents;
 
    n->contents = contents;
-
+   n->length = length;
+   
    return original;
 }
 
 size_t File_getContentLength(File_T n) {
-   size_t len;
-   
    assert (n != NULL);
    
-   len = n->length;
-   
-   return len;
+   return n->length;
 }
 
 /* see node.h for specification */
