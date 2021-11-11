@@ -312,8 +312,6 @@ int FT_insertFile(char *path, void *contents, size_t length)
    
     current = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
-    if(foundFullPath) 
-       return ALREADY_IN_TREE;
     if(isFile) 
        return NOT_A_DIRECTORY;
     
