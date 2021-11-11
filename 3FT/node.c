@@ -168,29 +168,46 @@ size_t Node_getNumChildren(Node_T n, boolean file) {
 }
 
 /* see node.h for specification */
-int Node_hasChild(Node_T n, const char* path, size_t* childID,
-   boolean file) {
+int Node_hasDirChild(Node_T n, const char* path, size_t* childID) {
    size_t index;
    int result;
    Node_T checker;
-   DynArray_T children;
 
    assert(n != NULL);
    assert(path != NULL);
 
    checker = Node_create(path, NULL);
    if(checker == NULL) {
+      return 1;
+   }
+
+   result = DynArray_bsearch(n->dchildren, checker, &index,
+                    (int (*)(const void*, const void*)) File_compare);
+   (void) Node_destroy(checker);
+
+   if(childID != NULL)
+      *childID = index;
+
+   return result;
+}
+
+/* see node.h for specification */
+int Node_hasFileChild(Node_T n, const char* path, size_t* childID) {
+   size_t index;
+   int result;
+   File_T checker;
+   
+   assert(n != NULL);
+   assert(path != NULL);
+
+   checker = File_create(path, NULL);
+   if(checker == NULL) {
       return -1;
    }
 
-   if(file)
-        children = n->fchildren;
-    else
-        children = n->dchildren;
-
-   result = DynArray_bsearch(children, checker, &index,
-                    (int (*)(const void*, const void*)) Node_compare);
-   (void) Node_destroy(checker);
+   result = DynArray_bsearch(n->fchildren, checker, &index,
+                    (int (*)(const void*, const void*)) File_compare);
+   (void) File_destroy(checker);
 
    if(childID != NULL)
       *childID = index;

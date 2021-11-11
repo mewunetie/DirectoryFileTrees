@@ -60,16 +60,26 @@ char* Node_getPath(Node_T n);
 size_t Node_getNumChildren(Node_T n, boolean file);
 
 /*
-   Returns 1 if n has a child directory with path,
-   0 if it does not have such a child, and -1 if
+  Returns 1 if n has a child directory with path,
+  0 if it does not have such a directory child, and -1 if
+  there is an allocation error during search.
+
+  If n does have such a child, and childID is not NULL, store the
+  child's identifier in *childID. If n does not have such a child,
+  store the identifier that such a child would have in *childID.
+*/
+int Node_hasDirChild(Node_T n, const char* path, size_t *childID);
+
+/*
+   Returns 1 if n has a child file with path,
+   0 if it does not have such a file child, and -1 if
    there is an allocation error during search.
 
    If n does have such a child, and childID is not NULL, store the
    child's identifier in *childID. If n does not have such a child,
    store the identifier that such a child would have in *childID.
 */
-int Node_hasChild(Node_T n, const char* path, size_t* childID,
-                  boolean file);
+int Node_hasFileChild(Node_T n, const char* path, size_t* childID);
 
 /*
    Returns the child node of n with identifier childID, if one exists,
