@@ -392,8 +392,7 @@ int FT_rmFile(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
-    *childID = 0;
+    size_t childID = 0;
 
     assert(path != NULL);
    
@@ -424,10 +423,10 @@ int FT_rmFile(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          result = Node_hasChild(parent, path, childID, TRUE);
+          result = Node_hasChild(parent, path, &childID, TRUE);
           if (result) {
 
-             curr = Node_getFileChild(parent, *childID);
+             curr = Node_getFileChild(parent, childID);
              File_unlinkChild(parent, curr);
              File_destroy(curr);
              return SUCCESS;
@@ -453,8 +452,7 @@ void *FT_getFileContents(char *path)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
-    *childID = 0;
+    size_t childID = 0;
 
     assert(path != NULL);
    
@@ -485,9 +483,9 @@ void *FT_getFileContents(char *path)
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          result = Node_hasChild(parent, path, childID, TRUE);
+          result = Node_hasChild(parent, path, &childID, TRUE);
           if (result) {
-             curr = Node_getFileChild(parent, *childID);
+             curr = Node_getFileChild(parent, childID);
              return File_getContents(curr);
           }
       }
@@ -506,8 +504,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
-    *childID = 0;
+    size_t childID = 0;
 
     assert(path != NULL);
    
@@ -538,9 +535,9 @@ void *FT_replaceFileContents(char *path, void *newContents,
 
     else {
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          result = Node_hasChild(parent, path, childID, TRUE);
+          result = Node_hasChild(parent, path, &childID, TRUE);
           if (result) {
-             curr = Node_getFileChild(parent, *childID);
+             curr = Node_getFileChild(parent, childID);
              return File_replaceContents(curr, newContents, newLength);
           }
       }
@@ -558,8 +555,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     boolean *isFile = FALSE;
     char *lastOccurance;
     char *parentPath;
-    size_t *childID;
-    *childID = 0;
+    size_t childID = 0;
 
     assert(path != NULL);
 
@@ -592,16 +588,16 @@ int FT_stat(char *path, boolean *type, size_t *length)
     }
 
        if (!strcmp(parentPath, Node_getPath(parent))) {
-          result = Node_hasChild(parent, path, childID, TRUE);
+          result = Node_hasChild(parent, path, &childID, TRUE);
           if (result) {
-             curr = Node_getFileChild(parent, *childID);
+             curr = Node_getFileChild(parent, childID);
              *type = TRUE;
              *length = File_getContentLength(curr);
              return SUCCESS;
           }
           if (result == -1)
             return MEMORY_ERROR;
-          result = Node_hasChild(parent, path, childID, FALSE);
+          result = Node_hasChild(parent, path, NULL, FALSE);
           if (result) {
              *type = FALSE;
              return SUCCESS;
