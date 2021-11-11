@@ -660,6 +660,19 @@ static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
 }
 
 /*
+   Alternate version of strlen that uses pAcc as an in-out parameter
+   to accumulate a string length, rather than returning the length of
+   str, and also always adds one more in addition to str's length.
+*/
+static void FT_strlenAccumulate(char* str, size_t* pAcc) {
+   assert(pAcc != NULL);
+
+   if(str != NULL)
+      *pAcc += (strlen(str) + 1);
+}
+
+
+/*
    Alternate version of strcat that inverts the typical argument
    order, appending str onto acc, and also always adds a newline at
    the end of the concatenated string.
@@ -684,7 +697,7 @@ char *FT_toString(void)
    nodes = DynArray_new(count);
    (void) FT_preOrderTraversal(root, nodes, 0);
 
-   DynArray_map(nodes, (void (*)(void *, void*)) FT_strcatAccumulate,
+   DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
                 (void*) &totalStrlen);
 
    result = malloc(totalStrlen);
