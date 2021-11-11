@@ -230,10 +230,11 @@ boolean FT_containsDir(char *path)
    if(curr == NULL) {
       return FALSE;
    }
-   if(foundFullPath)
-      return TRUE;
+
+   if(!foundFullPath)
+      return FALSE;
    
-   return FALSE;
+   return TRUE;
 }
 
 
