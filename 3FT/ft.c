@@ -432,13 +432,13 @@ int FT_rmFile(char *path)
     if(!isInitialized)
       return INITIALIZATION_ERROR;
 
-     lastOccurance = strrchr(path, '/');
+    lastOccurance = strrchr(path, '/');
 
     if (lastOccurance == NULL) {
        return NO_SUCH_PATH;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return MEMORY_ERROR;
@@ -474,6 +474,7 @@ int FT_rmFile(char *path)
           }
       }
     }
+
     free(parentPath);
     return NO_SUCH_PATH;
 }
