@@ -163,6 +163,9 @@ void* File_getContents(File_T n);
 */
 void* File_replaceContents(File_T n, void *contents, size_t length);
 
+/* Returns the length of the contents of the file */
+size_t File_getContentLength(File_T n);
+
 /*
   Makes child a child of parent, if possible, and returns SUCCESS.
   This is not possible in the following cases:
