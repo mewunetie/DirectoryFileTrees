@@ -11,9 +11,7 @@
 
 #include "dynarray.h"
 #include "ft.h"
-#include "FT_directory.h"
-#include "FT_file.h"
-#include "checkerDT.h"
+#include "node.h"
 
 /* A Directory Tree is an AO with 3 state variables: */
 /* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
@@ -35,24 +33,35 @@ static size_t count;
    or NULL if there is no node in curr's hierarchy that matches
    a prefix of the path
 */
-static Node_T FT_traversePath(char* path, Node_T curr) {
+static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile) {
    Node_T found;
+   File_T fileFound;
    size_t i;
+   *isFile = FALSE;
 
    assert(path != NULL);
 
    if(curr == NULL)
       return NULL;
 
-   else if(!strcmp(path,Node_getPath(curr)))
+   if(!strcmp(path,Node_getPath(curr)))
       return curr;
 
-   else if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
-      for(i = 0; i < Node_getNumChildren(curr); i++) {
+   if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
+      for(i = 0; i < Node_getNumChildren(curr, 0); i++) {
+
+         fileFound = Node_getFileChild(curr, i);
+
+         if (fileFound != NULL) {
+            *isFile = TRUE;
+            return NULL;
+         }
+
          found = FT_traversePath(path,
-                                Node_getChild(curr, i));
+                                Node_getDirChild(curr, i), &isFile);
          if(found != NULL)
             return found;
+
       }
       return curr;
    }
@@ -172,15 +181,21 @@ int FT_insertDir(char *path)
 {
    Node_T curr;
    int result;
+   boolean isFile;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
    assert(path != NULL);
 
    if(!isInitialized)
       return INITIALIZATION_ERROR;
-   curr = FT_traversePath(path, root);
+   curr = FT_traversePath(path, root, &isFile);
+
+   
+   if (curr == NULL && isFile) {
+      return NOT_A_DIRECTORY;
+   }
+
    result = FT_insertRestOfPath(path, curr);
-   assert(CheckerDT_isValid(isInitialized,root,count));
+
    return result;
 }
 
@@ -189,13 +204,13 @@ boolean FT_containsDir(char *path)
     Node_T curr;
    boolean result;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+
    assert(path != NULL);
 
    if(!isInitialized)
       return FALSE;
 
-   curr = FT_traversePath(path, root);
+   curr = FT_traversePath(path, root, result);
 
 
    if(curr == NULL)
@@ -205,7 +220,7 @@ boolean FT_containsDir(char *path)
    else
       result = TRUE;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
+
    return result;
 }
 
@@ -215,255 +230,478 @@ boolean FT_containsDir(char *path)
 int FT_rmDir(char *path)
 {
     Node_T curr, parent;
-   int result;
+    int result;
+    boolean *isFile;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   assert(path != NULL);
+    assert(path != NULL);
    
 
-   if(!isInitialized)
+    if(!isInitialized)
       return INITIALIZATION_ERROR;
 
-   curr = FT_traversePath(path, root);
-   if(curr == NULL)
-      result =  NO_SUCH_PATH;
-   else {
+    curr = FT_traversePath(path, root, &isFile);
+    if(curr == NULL) {
+       if(isFile) {
+          return NOT_A_DIRECTORY;
+       }
+       result =  NO_SUCH_PATH;
+    }
+      
+    else {
          parent = Node_getParent(curr);
 
-   if(!strcmp(path,Node_getPath(curr))) 
+    if(!strcmp(path,Node_getPath(curr))) 
    {
       if(parent == NULL)
          root = NULL;
+      else {
+         Node_unlinkChild(parent, curr);
+      }
 
       count -= Node_destroy(curr);
-
       result = SUCCESS;
    }
 
-   else
+    else
       result = NO_SUCH_PATH;
    }
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   return result;
+    return result;
 }
-
-/*
-   Starting at the parameter curr, traverses as far down
-   the hierarchy as possible while still matching the path
-   parameter.
-
-   Returns a pointer to the farthest matching node down that path,
-   or NULL if there is no node in curr's hierarchy that matches
-   a prefix of the path
-*/
-static File_T FT_traversePathFile(char* path, File_T curr) {
-   File_T found;
-   size_t i;
-
-   assert(path != NULL);
-
-   if(curr == NULL)
-      return NULL;
-
-   else if(!strcmp(path,File_getPath(File_getParent(curr))))
-      return curr;
-
-   else if(!strncmp(path, File_getPath(curr), strlen(File_getPath(File_getParent(curr))))) {
-      while (File_getParent != NULL) {
-         found = FT_traversePath(path,
-                                File_getParent(curr));
-         if(found != NULL)
-            return found;
-      }
-      return curr;
-   }
-   return NULL;
-}
-
-
-static int FT_insertPathHelper(char* path, File_T parent) {
-
-   File_T curr = parent;
-   File_T firstNew = NULL;
-   File_T new;
-   char* copyPath;
-   char* dirToken;
-   int result;
-   size_t newCount = 0;
-
-   assert(path != NULL);
-
-   if(curr == NULL) {
-      if(root != NULL) {
-         return CONFLICTING_PATH;
-      }
-   }
-   else if(!strcmp(path, File_getPath(curr)))
-         return ALREADY_IN_TREE;
-
-
-   copyPath = malloc(strlen(path)+1);
-   
-   if(copyPath == NULL)
-      return MEMORY_ERROR;
-
-   strcpy(copyPath, path);
-
-   dirToken = strtok(copyPath, "/");
-
-   while(dirToken != NULL) {
-      new = File_create(dirToken, curr,);
-
-      if(new == NULL) {
-         if(firstNew != NULL)
-            (void) File_destroy(firstNew);
-         free(copyPath);
-         return MEMORY_ERROR;
-      }
-
-      newCount++;
-
-      if(firstNew == NULL)
-         firstNew = new;
-
-      curr = new;
-      dirToken = strtok(NULL, "/");
-   }
-
-   free(copyPath);
-
-    count += newCount;
-
-   if(parent == NULL) {
-      root = firstNew;
-      return SUCCESS;
-   }
-
-      return result;
-}
-
-
 
 
 int FT_insertFile(char *path, void *contents, size_t length)
 {
-    File_T curr;
-   int result;
+    File_T file;
+    Node_T current;
+    char *lastOccurance;
+    char *parentPath;
+    int result;
+    int exists;
+    boolean *isFile;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   assert(path != NULL);
-
-   if(!isInitialized)
+    assert(path != NULL);
+    
+    if(!isInitialized)
       return INITIALIZATION_ERROR;
 
+    lastOccurance = strrchr(path, '/');
 
-    curr = File_create(path, NULL, contents, length);
-   result = FT_insertPathHelper(path, curr);
+    if (lastOccurance == NULL) {
+       return CONFLICTING_PATH;
+    }
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   return result;
+    parentPath = malloc((lastOccurance - path + 1));
 
+    if (parentPath == NULL) {
+       return MEMORY_ERROR;
+    }
+
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    current = FT_traversePath(parentPath, root, &isFile);
+
+    if (current == NULL) {
+        if (root != NULL) {
+          return CONFLICTING_PATH;
+       }
+         result = FT_insertRestOfPath(parentPath, current);
+        if (result != SUCCESS) {
+          return result;
+       }
+        current = FT_traversePath(parentPath, current, &isFile);
+    }
+
+    else {
+       if (strcmp(parentPath, Node_getPath(current))) {
+          result = FT_insertRestOfPath(parentPath, current);
+
+          if (result != SUCCESS) {
+             return result;
+          }
+          current = FT_traversePath(parentPath, current, &isFile);
+      }
+    }
+
+    exists = (Node_hasChild(current, path, NULL, TRUE) || Node_hasChild(current, path, NULL, FALSE));
+
+    if (exists) {
+       return ALREADY_IN_TREE;
+    }
+
+    file = File_create(path, current, contents, length);
+
+    if(file == NULL) {
+       return MEMORY_ERROR;
+    }
+
+    result = File_linkChild(current, file);
+
+    return result;
 }
 
 boolean FT_containsFile(char *path)
 {
+    Node_T parent;
     File_T curr;
-   boolean result;
+    boolean result;
+    boolean *isFile;
+    char *lastOccurance;
+    char *parentPath;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   assert(path != NULL);
+    assert(path != NULL);
 
-   if(!isInitialized)
+    if(!isInitialized)
       return FALSE;
 
-   curr = FT_traversePathFile(path, root);
+    lastOccurance = strrchr(path, '/');
 
+    if (lastOccurance == NULL) {
+       return CONFLICTING_PATH;
+    }
 
-   if(curr == NULL)
-      result = FALSE;
-   else if(strcmp(path, File_getPath(curr)))
-      result = FALSE;
-   else
-      result = TRUE;
+    parentPath = malloc((lastOccurance - path + 1));
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   return result;
+    if (parentPath == NULL) {
+       return MEMORY_ERROR;
+    }
 
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    parent = FT_traversePath(parentPath, root, &isFile);
+
+    if (parent == NULL) {
+        return FALSE;
+    }
+
+    else {
+       if (!strcmp(parentPath, Node_getPath(parent))) {
+          result = Node_hasChild(parent, path, NULL, TRUE);
+          if (result) {
+             return TRUE;
+          }
+      }
+    }
+
+      return FALSE;
 }
+
 int FT_rmFile(char *path)
 {
-     File_T curr, parent;
-   int result;
+    File_T curr;
+    Node_T parent;
+    int result;
+    boolean *isFile;
+    char *lastOccurance;
+    char *parentPath;
+    size_t *childID;
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   assert(path != NULL);
+    assert(path != NULL);
    
 
-   if(!isInitialized)
+    if(!isInitialized)
       return INITIALIZATION_ERROR;
 
-   curr = FT_traversePathFile(path, root);
-   if(curr == NULL)
-      result =  NO_SUCH_PATH;
-   else {
-         parent = File_getParent(curr);
+     lastOccurance = strrchr(path, '/');
 
-   if(!strcmp(path,File_getPath(curr))) 
-   {
-      if(parent == NULL)
-         root = NULL;
+    if (lastOccurance == NULL) {
+       return NO_SUCH_PATH;
+    }
 
-      File_destroy(curr);
+    parentPath = malloc((lastOccurance - path + 1));
 
-      result = SUCCESS;
-   }
+    if (parentPath == NULL) {
+       return MEMORY_ERROR;
+    }
 
-   else
-      result = NO_SUCH_PATH;
-   }
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    parent = FT_traversePath(parentPath, root, &isFile);
 
-   assert(CheckerDT_isValid(isInitialized,root,count));
-   return result;
+    if (parent == NULL) {
+        return NO_SUCH_PATH;
+    }
+
+    else {
+       if (!strcmp(parentPath, Node_getPath(parent))) {
+          result = Node_hasChild(parent, path, childID, TRUE);
+          if (result) {
+
+             curr = Node_getFileChild(parent, *childID);
+             File_unlinkChild(parent, curr);
+             File_destroy(curr);
+             return SUCCESS;
+          }
+          if (result == -1) {
+             return MEMORY_ERROR;
+          }
+          if(Node_hasChild(parent, path, NULL, FALSE) == TRUE) {
+             return NOT_A_FILE;
+          }
+      }
+    }
+
+    return NO_SUCH_PATH;
 }
+
+
 void *FT_getFileContents(char *path)
 {
+    File_T curr;
+    Node_T parent;
+    int result;
+    boolean *isFile;
+    char *lastOccurance;
+    char *parentPath;
+    size_t *childID;
+
+    assert(path != NULL);
+   
+
+    if(!isInitialized)
+      return NULL;
+
+     lastOccurance = strrchr(path, '/');
+
+    if (lastOccurance == NULL) {
+       return NULL;
+    }
+
+    parentPath = malloc((lastOccurance - path + 1));
+
+    if (parentPath == NULL) {
+       return NULL;
+    }
+
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    parent = FT_traversePath(parentPath, root, &isFile);
+
+    if (parent == NULL) {
+        return NULL;
+    }
+
+    else {
+       if (!strcmp(parentPath, Node_getPath(parent))) {
+          result = Node_hasChild(parent, path, childID, TRUE);
+          if (result) {
+             curr = Node_getFileChild(parent, *childID);
+             return File_getContents(curr);
+          }
+      }
+    }
+
     
+    return NULL;
 }
+
 void *FT_replaceFileContents(char *path, void *newContents,
                              size_t newLength)
 {
+  File_T curr;
+    Node_T parent;
+    int result;
+    boolean *isFile;
+    char *lastOccurance;
+    char *parentPath;
+    size_t *childID;
 
+    assert(path != NULL);
+   
+
+    if(!isInitialized)
+      return NULL;
+
+     lastOccurance = strrchr(path, '/');
+
+    if (lastOccurance == NULL) {
+       return NULL;
+    }
+
+    parentPath = malloc((lastOccurance - path + 1));
+
+    if (parentPath == NULL) {
+       return NULL;
+    }
+
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    parent = FT_traversePath(parentPath, root, &isFile);
+
+    if (parent == NULL) {
+        return NULL;
+    }
+
+    else {
+       if (!strcmp(parentPath, Node_getPath(parent))) {
+          result = Node_hasChild(parent, path, childID, TRUE);
+          if (result) {
+             curr = Node_getFileChild(parent, *childID);
+             return File_replaceContents(curr, newContents, newLength);
+          }
+      }
+    }
+
+    
+    return NULL;
 }
 
 int FT_stat(char *path, boolean *type, size_t *length)
 {
+    Node_T parent;
+    Node_T directory;
+    File_T curr;
+    boolean result;
+    boolean *isFile;
+    char *lastOccurance;
+    char *parentPath;
+    size_t *childID;
 
+    assert(path != NULL);
+
+    if(!isInitialized)
+      return INITIALIZATION_ERROR;
+
+    lastOccurance = strrchr(path, '/');
+
+    if (lastOccurance == NULL) {
+       if(!strcmp(path, Node_getPath(root))) {
+          *type = FALSE;
+          return SUCCESS;
+       }
+       return NO_SUCH_PATH;
+    }
+
+    parentPath = malloc((lastOccurance - path + 1));
+
+    if (parentPath == NULL) {
+       return MEMORY_ERROR;
+    }
+
+    strncpy(parentPath, path, lastOccurance - path);
+    strcat(parentPath, '\0');
+   
+    parent = FT_traversePath(parentPath, root, &isFile);
+
+    if (parent == NULL) {
+        return NO_SUCH_PATH;
+    }
+
+       if (!strcmp(parentPath, Node_getPath(parent))) {
+          result = Node_hasChild(parent, path, childID, TRUE);
+          if (result) {
+             curr = Node_getFileChild(parent, *childID);
+             *type = TRUE;
+             *length = File_getContentLength(curr);
+             return SUCCESS;
+          }
+          if (result == -1)
+            return MEMORY_ERROR;
+          result = Node_hasChild(parent, path, childID, FALSE);
+          if (result) {
+             *type = FALSE;
+             return SUCCESS;
+          }
+          if (result == -1)
+            return MEMORY_ERROR;
+      }
+
+      return NO_SUCH_PATH;
 }
+
 int FT_init(void)
 {
-
+   if(isInitialized)
+      return INITIALIZATION_ERROR;
+   isInitialized = 1;
+   root = NULL;
+   count = 0;
+   return SUCCESS;
 }
-
-
 
 int FT_destroy(void)
 {
-    assert(CheckerDT_isValid(isInitialized,root,count));
    if(!isInitialized)
       return INITIALIZATION_ERROR;
 
    if (root != NULL) {
+       Node_destroy(root);
        count = 0;
    }
 
    root = NULL;
    isInitialized = 0;
-   assert(CheckerDT_isValid(isInitialized,root,count));
    return SUCCESS;
 
 }
+
+/*
+   Performs a pre-order traversal of the tree rooted at n,
+   inserting each payload to DynArray_T d beginning at index i.
+   Returns the next unused index in d after the insertion(s).
+*/
+static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
+   size_t c;
+
+   assert(d != NULL);
+
+   if(n != NULL) {
+      (void) DynArray_set(d, i, Node_getPath(n));
+      i++;
+      for(c = 0; c < Node_getNumChildren(n, TRUE); c++) {
+         DynArray_set(d, i, File_getPath(Node_getFileChild(n, c)));
+         i++;
+      }
+      for(c = 0; c < Node_getNumChildren(n, FALSE); c++) {
+         i = FT_preOrderTraversal(Node_getDirChild(n, c), d, i);
+      }
+   }
+   return i;
+}
+
+/*
+   Alternate version of strcat that inverts the typical argument
+   order, appending str onto acc, and also always adds a newline at
+   the end of the concatenated string.
+*/
+static void FT_strcatAccumulate(char* str, char* acc) {
+   assert(acc != NULL);
+
+   if(str != NULL)
+      strcat(acc, str); strcat(acc, "\n");
+}
+
 char *FT_toString(void)
 {
-    return File_ToString(root);
+   DynArray_T nodes;
+   size_t totalStrlen = 1;
+   char* result = NULL;
+
+
+   if(!isInitialized)
+      return NULL;
+
+   nodes = DynArray_new(count);
+   (void) FT_preOrderTraversal(root, nodes, 0);
+
+   DynArray_map(nodes, (void (*)(void *, void*)) FT_strcatAccumulate,
+                (void*) &totalStrlen);
+
+   result = malloc(totalStrlen);
+   if(result == NULL) {
+      DynArray_free(nodes);
+      return NULL;
+   }
+   *result = '\0';
+
+   DynArray_map(nodes, (void (*)(void *, void*)) FT_strcatAccumulate,
+                (void *) result);
+
+   DynArray_free(nodes);
+   return result;
 }
