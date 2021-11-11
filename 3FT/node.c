@@ -200,7 +200,7 @@ int Node_hasFileChild(Node_T n, const char* path, size_t* childID) {
    assert(n != NULL);
    assert(path != NULL);
 
-   checker = File_create(path, NULL);
+   checker = File_create(path, NULL, NULL, 0);
    if(checker == NULL) {
       return -1;
    }
@@ -249,7 +249,7 @@ int Node_linkChild(Node_T parent, Node_T child) {
    assert(parent != NULL);
    assert(child != NULL);
 
-   if(Node_hasChild(parent, child->path, NULL, FALSE))
+   if(Node_hasFileChild(parent, child->path, NULL))
       return ALREADY_IN_TREE;
 
    i = strlen(parent->path);
@@ -440,7 +440,7 @@ int File_linkChild(Node_T parent, File_T child) {
    assert(parent != NULL);
    assert(child != NULL);
 
-   if(Node_hasChild(parent, child->path, NULL, TRUE))
+   if(Node_hasFileChild(parent, child->path, NULL))
       return ALREADY_IN_TREE;
 
    i = strlen(parent->path);
