@@ -217,7 +217,7 @@ int FT_insertDir(char *path)
 boolean FT_containsDir(char *path)  
 {
    Node_T curr;
-   boolean result;
+   boolean isFile;
    boolean foundFullPath = FALSE;
 
    assert(path != NULL);
@@ -225,10 +225,10 @@ boolean FT_containsDir(char *path)
    if(!isInitialized)
       return FALSE;
 
-   curr = FT_traversePath(path, root, &result, &foundFullPath);
+   curr = FT_traversePath(path, root, &isFile, &foundFullPath);
 
 
-   if(curr == NULL || result) {
+   if(curr == NULL || isFile) {
       return FALSE;
    }
 
@@ -303,7 +303,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
        return CONFLICTING_PATH;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return MEMORY_ERROR;
