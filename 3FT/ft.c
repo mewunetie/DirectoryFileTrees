@@ -170,7 +170,9 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
       return SUCCESS;
    }
 
-      return result;
+   result = FT_linkParentToChild(parent, firstNew);
+
+   return result;
 }
 
 
