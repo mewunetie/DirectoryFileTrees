@@ -315,7 +315,6 @@ int FT_insertFile(char *path, void *contents, size_t length)
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, "");
    
     current = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
@@ -389,14 +388,14 @@ boolean FT_containsFile(char *path)
        return FALSE;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return FALSE;
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, "");
+
    
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
@@ -506,14 +505,13 @@ void *FT_getFileContents(char *path)
        return NULL;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return NULL;
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, "");
    
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
@@ -561,14 +559,13 @@ void *FT_replaceFileContents(char *path, void *newContents,
        return NULL;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return NULL;
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, "");
    
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
@@ -618,14 +615,13 @@ int FT_stat(char *path, boolean *type, size_t *length)
        return NO_SUCH_PATH;
     }
 
-    parentPath = malloc((lastOccurance - path + 1));
+    parentPath = calloc((lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return MEMORY_ERROR;
     }
 
     strncpy(parentPath, path, lastOccurance - path);
-    strcat(parentPath, "");
    
     parent = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
 
