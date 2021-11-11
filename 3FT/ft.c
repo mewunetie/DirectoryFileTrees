@@ -194,13 +194,12 @@ int FT_insertDir(char *path)
    if(!isInitialized)
       return INITIALIZATION_ERROR;
    curr = FT_traversePath(path, root, &isFile, &foundFullPath);
-
+   if(foundFullPath) {
+            return ALREADY_IN_TREE;
+   }
    
    if (curr == NULL) {
-      if (isFile) {
-         if(foundFullPath) {
-            return ALREADY_IN_TREE;
-         }
+      if (isFile) {  
          return NOT_A_DIRECTORY;
       }
       if (root != NULL) {
