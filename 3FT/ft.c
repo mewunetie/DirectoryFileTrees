@@ -12,6 +12,7 @@
 #include "dynarray.h"
 #include "ft.h"
 #include "node.h"
+#include "file.h"
 
 /* A Directory Tree is an AO with 3 state variables: */
 /* a flag for if it is in an initialized state (TRUE) or not (FALSE) */
@@ -21,9 +22,6 @@ static Node_T root;
 /* a counter of the number of nodes in the hierarchy */
 static size_t count;
 
-
-
-
 /*
    Starting at the parameter curr, traverses as far down
    the hierarchy as possible while still matching the path
@@ -31,9 +29,16 @@ static size_t count;
 
    Returns a pointer to the farthest matching node down that path,
    or NULL if there is no node in curr's hierarchy that matches
-   a prefix of the path
+   a prefix of the path.
+
+   If the full path is found, sets foundFullPath to true.
+   Else, foundFullPath will be false.
+
+   If a file is found with a prefix of the path or the path itself,
+   isFile is set to true. Otherwise, it will be false.
 */
-static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean *foundFullPath) {
+static Node_T FT_traversePath(char* path, Node_T curr,
+                              boolean *isFile, boolean *foundFullPath) {
    Node_T found;
    File_T fileFound;
    size_t i;
@@ -42,6 +47,7 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
    assert(isFile != NULL);
    assert(foundFullPath != NULL);
 
+   *foundFullPath = FALSE;
    *isFile = FALSE;
    if(curr == NULL)
       return NULL;
@@ -53,8 +59,8 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
 
    if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
       for(i = 0; i < Node_getNumChildren(curr, 0); i++) {
-         found = FT_traversePath(path,
-                                Node_getDirChild(curr, i), isFile, foundFullPath);
+         found = FT_traversePath(path, Node_getDirChild(curr, i),
+                                 isFile, foundFullPath);
          if(found != NULL)
             return found;
          if (*isFile) {
@@ -78,27 +84,6 @@ static Node_T FT_traversePath(char* path, Node_T curr, boolean *isFile, boolean 
       return curr;
    }
    return NULL;
-}
-
-
-/*
-   Given a prospective parent and child node,
-   adds child to parent's children list, if possible
-
-   If not possible, destroys the hierarchy rooted at child
-   and returns PARENT_CHILD_ERROR, otherwise, returns SUCCESS.
-*/
-
-static int FT_linkParentToChild(Node_T parent, Node_T child) {
-
-   assert(parent != NULL);
-
-   if(Node_linkChild(parent, child) != SUCCESS) {
-      (void) Node_destroy(child);
-      return PARENT_CHILD_ERROR;
-   }
-
-   return SUCCESS;
 }
 
 /*
@@ -161,11 +146,9 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
       if(firstNew == NULL)
          firstNew = new;
       else {
-         result = FT_linkParentToChild(curr, new);
-         if(result != SUCCESS) {
+         if((result = Node_linkChild(curr, new)) != SUCCESS) {
             (void) Node_destroy(new);
             (void) Node_destroy(firstNew);
-            free(copyPath);
             return result;
          }
       }
@@ -184,13 +167,14 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
       return SUCCESS;
    }
 
-   result = FT_linkParentToChild(parent, firstNew);
+   if((result = Node_linkChild(parent, firstNew)) != SUCCESS)
+      (void) Node_destroy(firstNew);
+
 
    return result;
 }
 
-
-
+/* see ft.h for specification */
 int FT_insertDir(char *path)
 {
    Node_T curr;
@@ -222,6 +206,7 @@ int FT_insertDir(char *path)
    return result;
 }
 
+/* see ft.h for specification */
 boolean FT_containsDir(char *path)  
 {
    Node_T curr;
@@ -246,9 +231,7 @@ boolean FT_containsDir(char *path)
    return TRUE;
 }
 
-
-
-
+/* see ft.h for specification */
 int FT_rmDir(char *path)
 {
     Node_T curr, parent;
@@ -287,6 +270,7 @@ int FT_rmDir(char *path)
    return NO_SUCH_PATH;
 }
 
+/* see ft.h for specification */
 int FT_insertFile(char *path, void *contents, size_t length)
 {
     File_T file;
@@ -355,6 +339,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
     return result;
 }
 
+/* see ft.h for specification */
 boolean FT_containsFile(char *path)
 {
     Node_T parent;
@@ -381,6 +366,7 @@ boolean FT_containsFile(char *path)
     return FALSE;
 }
 
+/* see ft.h for specification */
 int FT_rmFile(char *path)
 {
     File_T curr;
@@ -420,7 +406,7 @@ int FT_rmFile(char *path)
     return NO_SUCH_PATH;
 }
 
-
+/* see ft.h for specification */
 void *FT_getFileContents(char *path)
 {
     File_T curr;
@@ -451,6 +437,7 @@ void *FT_getFileContents(char *path)
     return NULL;
 }
 
+/* see ft.h for specification */
 void *FT_replaceFileContents(char *path, void *newContents,
                              size_t newLength)
 {
@@ -482,6 +469,7 @@ void *FT_replaceFileContents(char *path, void *newContents,
     return NULL;
 }
 
+/* see ft.h for specification */
 int FT_stat(char *path, boolean *type, size_t *length)
 {
     Node_T curr;
@@ -522,6 +510,7 @@ int FT_stat(char *path, boolean *type, size_t *length)
     return NO_SUCH_PATH;
 }
 
+/* see ft.h for specification */
 int FT_init(void)
 {
    if(isInitialized)
@@ -532,6 +521,7 @@ int FT_init(void)
    return SUCCESS;
 }
 
+/* see ft.h for specification */
 int FT_destroy(void)
 {
    if(!isInitialized)
@@ -596,6 +586,7 @@ static void FT_strcatAccumulate(char* str, char* acc) {
       strcat(acc, str); strcat(acc, "\n");
 }
 
+/* see ft.h for specification */
 char *FT_toString(void)
 {
    DynArray_T nodes;
