@@ -26,7 +26,7 @@ Node_T Node_create(const char* dir, Node_T parent);
 
 /*
   Destroys the entire hierarchy of nodes rooted at n,
-  including n itself.
+  including n itself. Returns the number of nodes destroyed.
 */
 size_t Node_destroy(Node_T n);
 

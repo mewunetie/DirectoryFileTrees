@@ -14,11 +14,15 @@
    Given a parent node and a file string fname, returns a new
    File_T or NULL if any allocation error occurs in creating
    the File or its fields.
+
    The new structure is initialized to have its path as the parent's
    path, which must exist, prefixed to the directory string parameter,
    separated by a slash. It is also initialized with its parent link
    as the parent parameter value, but the parent itself is not changed
    to link to the new File.
+
+   The file contains a pointer to contents, and holds the length of the
+   contents in its field length.
 */
 
 File_T File_create(const char* fname, Node_T parent, void* contents,

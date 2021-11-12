@@ -49,24 +49,34 @@ static Node_T FT_traversePath(char* path, Node_T curr,
 
    *foundFullPath = FALSE;
    *isFile = FALSE;
+
+   /* if the current node is NULL, cannot traverse further */
    if(curr == NULL)
       return NULL;
 
+   /* if the current path matches the target, we have traversed the
+      full path */
    if(!strcmp(path,Node_getPath(curr))) {
       *foundFullPath = TRUE;
       return curr;
    }
 
+   /* if the current path is a prefix of the target, continue traversing
+      through its children */
    if(!strncmp(path, Node_getPath(curr), strlen(Node_getPath(curr)))) {
+      /* iterate through directory children and traverse. return if
+         the end of any matching path has been found. */
       for(i = 0; i < Node_getNumChildren(curr, 0); i++) {
          found = FT_traversePath(path, Node_getDirChild(curr, i),
                                  isFile, foundFullPath);
          if(found != NULL)
             return found;
-         if (*isFile) {
-            return NULL;
-         }
       }
+
+      /* iterate through file children and check if paths match target
+         or a prefix of target. Indicate that a file has been found
+         and whether it matches the full path. Return the current
+         directory (the parent of the target file). */
       for(i = 0; i < Node_getNumChildren(curr, 1); i++) {
          fileFound = Node_getFileChild(curr, i);
 
@@ -113,11 +123,13 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
 
    assert(path != NULL);
 
+   /* if root is not NULL, curr must be a descendent of root */
    if(curr == NULL) {
       if(root != NULL) {
          return CONFLICTING_PATH;
       }
    }
+   /* if paths match, the target already exists */
    else {
       if(!strcmp(path, Node_getPath(curr)))
          return ALREADY_IN_TREE;
@@ -125,12 +137,16 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
       restPath += (strlen(Node_getPath(curr)) + 1);
    }
 
+   /* create a copy of the path to tokenize */
    copyPath = malloc(strlen(restPath)+1);
    if(copyPath == NULL)
       return MEMORY_ERROR;
    strcpy(copyPath, restPath);
    dirToken = strtok(copyPath, "/");
 
+   /* iterate through, create, and link subsequent directories from 
+      current until the full path is reached. If an error occurs, 
+      revert back to the initial file tree */
    while(dirToken != NULL) {
       new = Node_create(dirToken, curr);
 
@@ -143,6 +159,8 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
 
       newCount++;
 
+      /* link new nodes to each other, but not to parent in case
+         of any error */
       if(firstNew == NULL)
          firstNew = new;
       else {
@@ -167,6 +185,7 @@ static int FT_insertRestOfPath(char* path, Node_T parent) {
       return SUCCESS;
    }
 
+   /* connect the extended path to the parent node */
    if((result = Node_linkChild(parent, firstNew)) != SUCCESS)
       (void) Node_destroy(firstNew);
 
@@ -210,7 +229,7 @@ int FT_insertDir(char *path)
 boolean FT_containsDir(char *path)  
 {
    Node_T curr;
-   boolean isFile;
+   boolean isFile = FALSE;
    boolean foundFullPath = FALSE;
 
    assert(path != NULL);
@@ -287,26 +306,33 @@ int FT_insertFile(char *path, void *contents, size_t length)
     if(!isInitialized)
       return INITIALIZATION_ERROR;
 
+    /* create a truncated copy of path that represents the parent */
     lastOccurance = strrchr(path, '/');
 
     if (lastOccurance == NULL) {
        return CONFLICTING_PATH;
     }
 
-    parentPath = calloc((lastOccurance - path + 1), 1);
+    parentPath = calloc((size_t)(lastOccurance - path + 1), 1);
 
     if (parentPath == NULL) {
        return MEMORY_ERROR;
     }
 
-    strncpy(parentPath, path, lastOccurance - path);
-   
-    current = FT_traversePath(parentPath, root, &isFile, &foundFullPath);
+    strncpy(parentPath, path, (size_t)(lastOccurance - path));
 
+    /* search for the parent directory of the target file */
+    current = FT_traversePath(parentPath, root,
+                              &isFile, &foundFullPath);
+
+    /* the path terminates at a prefix file */
     if(isFile) {
        free(parentPath);
        return NOT_A_DIRECTORY;
     }
+
+    /* if the full parent path doesn't exist, insert it and continue
+       traversing down to the parent directory once created */
     if(!foundFullPath) {
        result = FT_insertRestOfPath(parentPath, current);
        if (result != SUCCESS) {
@@ -319,6 +345,7 @@ int FT_insertFile(char *path, void *contents, size_t length)
 
     free(parentPath);
 
+    /* check if the parent directory already has a child with path */
     exists = (Node_hasFileChild(current, path, NULL) ||
               Node_hasDirChild(current, path, NULL));
 
@@ -480,7 +507,9 @@ int FT_stat(char *path, boolean *type, size_t *length)
     boolean foundFullPath = FALSE;
 
     assert(path != NULL);
-
+    assert(type != NULL);
+    assert(length != NULL);
+    
     if(!isInitialized)
       return INITIALIZATION_ERROR;
 
@@ -528,8 +557,7 @@ int FT_destroy(void)
       return INITIALIZATION_ERROR;
 
    if (root != NULL) {
-       Node_destroy(root);
-       count = 0;
+       count -= Node_destroy(root);
    }
 
    root = NULL;
@@ -551,7 +579,8 @@ static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
    if(n != NULL) {
       (void) DynArray_set(d, i++, Node_getPath(n));
       for(c = 0; c < Node_getNumChildren(n, TRUE); c++) {
-         DynArray_set(d, i++, File_getPath(Node_getFileChild(n, c)));
+         (void) DynArray_set(d, i++,
+                             File_getPath(Node_getFileChild(n, c)));
       }
       for(c = 0; c < Node_getNumChildren(n, FALSE); c++) {
          i = FT_preOrderTraversal(Node_getDirChild(n, c), d, i);
@@ -567,6 +596,7 @@ static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
    str, and also always adds one more in addition to str's length.
 */
 static void FT_strlenAccumulate(char* str, size_t* pAcc) {
+   assert(str != NULL);
    assert(pAcc != NULL);
 
    if(str != NULL)
@@ -580,6 +610,7 @@ static void FT_strlenAccumulate(char* str, size_t* pAcc) {
    the end of the concatenated string.
 */
 static void FT_strcatAccumulate(char* str, char* acc) {
+   assert(str != NULL);
    assert(acc != NULL);
 
    if(str != NULL)

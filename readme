@@ -17,7 +17,11 @@ information given in the "Policies" web page (also available on armlab
 in the file ~cos217/AuthorizedSourcesList ) to this section of the
 readme file, and edit it as appropriate.
 
-
+Course lectures
+Course precepts
+Course website
+man pages
+Office hours
 
 ------------------------------------------------------------------------
 Student 2: What authorized sources of information did you use to
@@ -40,7 +44,7 @@ nature of the interaction, may additionally require the interaction
 being reported to the Committee on Discipline. Write "None" if you used
 no unauthorized sources of information.
 
-
+None.
 
 ------------------------------------------------------------------------
 Student 2: What unauthorized sources of information did you use to
@@ -60,7 +64,11 @@ no unauthorized sources of information.
 Student 1: What is your assessment of the assignment? Was it helpful?
 Was it fun?
 
-
+The assignment was very stressful, but I found it helpful in that it
+challenged our ability to create functioning and well-designed modules,
+which would be incredibly valuable for more complicated projects. The
+use of checker modules was also very insightful in practicing debugging
+and troubleshooting isseus.
 
 ------------------------------------------------------------------------
 Student 2: What is your assessment of the assignment? Was it helpful?
@@ -97,7 +105,15 @@ your disagreements with them? Copy the splint warnings here, and
 express your disagreement after each warning. If there are no
 warnings, then write "None."
 
-
+node.h:38:5: Function exported but not used outside node: Node_compare
+  A declaration is exported, but not used outside this module.
+  Declaration can use static qualifier. (Use -exportlocal to inhibit
+  warning)
+       node.c:137:1: Definition of Node_compare
+       
+We disagree with this warning because it is reasonable for a checker
+or further implementations of ft to want to compare nodes, i.e. in
+order to check order and possible duplicate nodes.
 
 ------------------------------------------------------------------------
 What warnings does critTer generate on your Part 3 code, and what are
@@ -105,7 +121,58 @@ your disagreements with them? Copy the critTer warnings here, and
 express your disagreement after each warning. If there are no
 warnings, then write "None."
 
+ft.c: line 653: low priority:
+   A file should contain no more than 15 functions;
+      this file contains 17 functions
 
+      This is a minor issue. 12 of these functions are necessary to
+      fulfill the interface functions, while the other 5 are necessary
+      helper functions. Without those functions, the code would be
+      repetitive, extraneous, and inefficient.
+
+ft.c: line 294: medium priority:
+   Do you want to validate 'contents' through an assert?
+
+ft.c: line 470: medium priority:
+   Do you want to validate 'newContents' through an assert?
+
+   The two warnings above are irrelevant, since the contents of a file
+   are allowed to be NULL. There is no way or reason to assert them.
+   
+ft.c: line 652: low priority:
+   A source code file should contain fewer than 500 lines;
+      this file contains 653 lines
+
+      This issue cannot be helped, given the multitude of functions
+      included in the file and their necessity.
+
+ft.c: line 85: low priority:
+   This area is deeply nested at level 4, consider refactoring
+
+ft.c: line 88: low priority:
+   This area is deeply nested at level 5, consider refactoring
+
+   The nested if statements in these two areas cannot be refactored
+   because the conditions necessitating the code inside them are heavily
+   dependent on each other.
+
+node.c: line 156: medium priority:
+   Do you want to validate 'childID' through an assert?
+
+node.c: line 180: medium priority:
+   Do you want to validate 'childID' through an assert?
+
+   These two warnings are irrelevant, since childID is allowed to be
+   NULL, so they is no reason to assert them.
+
+file.c: line 56: medium priority:
+   Do you want to validate 'contents' through an assert?
+
+file.c: line 137: medium priority:
+   Do you want to validate 'contents' through an assert?
+
+   These two warnings are irrelevant, since the contents of a file
+   are allowed to be NULL. There is no reason to assert them.
 
 ------------------------------------------------------------------------
 For each of the first three faulty BDT implementations required by Step

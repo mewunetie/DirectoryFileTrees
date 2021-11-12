@@ -51,22 +51,22 @@ struct file {
 };
 
 /* see FT_file.h for specification */
-File_T File_create(const char* dir, Node_T parent, void* contents,
+File_T File_create(const char* fname, Node_T parent, void* contents,
                    size_t length)
 {
    File_T new;
    char* path;
 
-   assert(dir != NULL);
+   assert(fname != NULL);
 
    new = malloc(sizeof(struct file));
    if(new == NULL)
       return NULL;
 
    if(parent == NULL)
-      path = malloc(strlen(dir)+1);
+      path = malloc(strlen(fname)+1);
    else
-      path = malloc(strlen(parent->path) + 1 + strlen(dir) + 1);
+      path = malloc(strlen(parent->path) + 1 + strlen(fname) + 1);
 
    if(path == NULL) {
       free(new);
@@ -79,7 +79,7 @@ File_T File_create(const char* dir, Node_T parent, void* contents,
       strcpy(path, parent->path);
       strcat(path, "/");
    }
-   strcat(path, dir);
+   strcat(path, fname);
 
    new->path = path;
    new->parent = parent;
@@ -161,28 +161,28 @@ int File_linkChild(Node_T parent, File_T child) {
    assert(parent != NULL);
    assert(child != NULL);
 
+   /* check if a duplicate child already exists */
    if(Node_hasFileChild(parent, child->path, NULL))
       return ALREADY_IN_TREE;
 
+   /* check that parent path is a prefix of child path */
    i = strlen(parent->path);
    if(strncmp(child->path, parent->path, i))
       return PARENT_CHILD_ERROR;
 
+   /* check that child path extends beyond parent path */
    rest = child->path + i;
    if(strlen(child->path) >= i && rest[0] != '/')
       return PARENT_CHILD_ERROR;
 
+   /* check that child isn't a grandchild of parent */
    rest++;
    if(strstr(rest, "/") != NULL)
       return PARENT_CHILD_ERROR;
 
    child->parent = parent;
 
-   if(DynArray_bsearch(parent->fchildren, child, &i,
-                       (int (*)(const void*, const void*))
-                       File_compare) == 1)
-      return ALREADY_IN_TREE;
-
+   /* check that child isn't already linked, add child at given index */
    if(DynArray_bsearch(parent->fchildren, child, &i,
                        (int (*)(const void*, const void*))
                        File_compare) == 1)
@@ -196,7 +196,7 @@ int File_linkChild(Node_T parent, File_T child) {
 
 /* see node.h for specification */
 void File_unlinkChild(Node_T parent, File_T child) {
-   size_t i = -1;
+   size_t i = 0;
 
    assert(parent != NULL);
    assert(child != NULL);

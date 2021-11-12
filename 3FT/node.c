@@ -39,6 +39,7 @@ Node_T Node_create(const char* dir, Node_T parent){
 
    assert(dir != NULL);
 
+   /* allocates memory for the node and its path */
    new = malloc(sizeof(struct node));
    if(new == NULL)
       return NULL;
@@ -53,6 +54,7 @@ Node_T Node_create(const char* dir, Node_T parent){
       return NULL;
    }
 
+   /* creates the path using the parent's path and its own name */
    *path = '\0';
 
    if(parent != NULL) {
@@ -61,13 +63,15 @@ Node_T Node_create(const char* dir, Node_T parent){
    }
    strcat(path, dir);
 
+   /* sets node fields */
    new->path = path;
 
    new->parent = parent;
 
    new->fchildren = DynArray_new(0);
    new->dchildren = DynArray_new(0);
-   
+
+   /* ensures that children arrays are created successfully */
    if(new->fchildren == NULL || new->dchildren == NULL) {
       if (new->dchildren != NULL) {
           DynArray_free(new->dchildren);
@@ -150,7 +154,7 @@ size_t Node_getNumChildren(Node_T n, boolean file) {
 
 /* see node.h for specification */
 int Node_hasDirChild(Node_T n, const char* path, size_t* childID) {
-   size_t index;
+   size_t index = 0;
    int result;
    Node_T checker;
 
@@ -163,7 +167,7 @@ int Node_hasDirChild(Node_T n, const char* path, size_t* childID) {
    }
 
    result = DynArray_bsearch(n->dchildren, checker, &index,
-                    (int (*)(const void*, const void*)) File_compare);
+                    (int (*)(const void*, const void*)) Node_compare);
    (void) Node_destroy(checker);
 
    if(childID != NULL)
@@ -174,7 +178,7 @@ int Node_hasDirChild(Node_T n, const char* path, size_t* childID) {
 
 /* see node.h for specification */
 int Node_hasFileChild(Node_T n, const char* path, size_t* childID) {
-   size_t index;
+   size_t index = 0;
    int result;
    File_T checker;
    
@@ -231,28 +235,29 @@ int Node_linkChild(Node_T parent, Node_T child) {
    assert(parent != NULL);
    assert(child != NULL);
 
+   /* check if the child already exists */
    if(Node_hasFileChild(parent, child->path, NULL))
       return ALREADY_IN_TREE;
 
+   /* check that parent path is a prefix of child path */
    i = strlen(parent->path);
    if(strncmp(child->path, parent->path, i))
       return PARENT_CHILD_ERROR;
-   
+
+   /* check that the child path extends beyond the parent path */
    rest = child->path + i;
    if(strlen(child->path) >= i && rest[0] != '/')
       return PARENT_CHILD_ERROR;
-   
+
+   /* check that the child is not a grandchild of parent */
    rest++;
    if(strstr(rest, "/") != NULL)
       return PARENT_CHILD_ERROR;
    
    child->parent = parent;
 
+   /* check that the child isnt already linked and add at given index */
    if(DynArray_bsearch(parent->dchildren, child, &i,
-         (int (*)(const void*, const void*)) Node_compare) == 1)
-      return ALREADY_IN_TREE;
-
-    if(DynArray_bsearch(parent->dchildren, child, &i,
          (int (*)(const void*, const void*)) Node_compare) == 1)
       return ALREADY_IN_TREE;
 
@@ -264,7 +269,7 @@ int Node_linkChild(Node_T parent, Node_T child) {
 
 /* see node.h for specification */
 void Node_unlinkChild(Node_T parent, Node_T child) {
-   size_t i;
+   size_t i = 0;
 
    assert(parent != NULL);
    assert(child != NULL);
